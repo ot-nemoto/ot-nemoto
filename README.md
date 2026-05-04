@@ -23,10 +23,13 @@
 | Project | Description | Tech |
 |---|---|---|
 | [classmethod-pricing-chart](https://github.com/ot-nemoto/classmethod-pricing-chart) | Classmethod社の AWS 請求レポート（monthly-report-YYYY-MM-ACCOUNTID.csv）をブラウザにドラッグ＆ドロップするだけで、アカウントやサービス別に月次コストを可視化できる Next.js 製アプリケーションです。複数アカウント・複数月の比較や年次集計をワンビューで確認できます。 | TypeScript |
+| [github-diff-viewer](https://github.com/ot-nemoto/github-diff-viewer) | GitHub 上の2つのファイルをリポジトリ・ブランチ・パスで指定するだけで差分を即座に表示できる Web アプリ。PAT によるプライベートリポジトリ対応、Split / Unified ビュー切替、URL 共有をサポート。 | TypeScript |
+| [github-issue-viewer](https://github.com/ot-nemoto/github-issue-viewer) | 複数のGitHubリポジトリのIssueとPRを一画面で横断的に確認できるビューアです。GitHub Personal Access Tokenを設定するだけで利用可能。タイプ・ステータス・ラベルによるフィルタリング、リポジトリ単位のグループ表示・折りたたみに対応しています。 | TypeScript |
 | [account-sql-generator](https://github.com/ot-nemoto/account-sql-generator) | 教育機関向けのユーザー/メンバーアカウントをまとめて登録するための SQL を生成する Next.js アプリケーションです。教師と生徒のアカウント情報をブラウザ上で編集・貼り付けし、users テーブルおよび member 系テーブル向けの INSERT 文を一括作成できます。 | TypeScript |
 <!-- PROJECTS_END -->
 
 ---
 
 <!-- LAST_UPDATED_START -->
+_Last updated: 2026-05-04 08:20 UTC_
 <!-- LAST_UPDATED_END -->
