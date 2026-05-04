@@ -25,3 +25,8 @@
 | [classmethod-pricing-chart](https://github.com/ot-nemoto/classmethod-pricing-chart) | Classmethod社の AWS 請求レポート（monthly-report-YYYY-MM-ACCOUNTID.csv）をブラウザにドラッグ＆ドロップするだけで、アカウントやサービス別に月次コストを可視化できる Next.js 製アプリケーションです。複数アカウント・複数月の比較や年次集計をワンビューで確認できます。 | TypeScript |
 | [account-sql-generator](https://github.com/ot-nemoto/account-sql-generator) | 教育機関向けのユーザー/メンバーアカウントをまとめて登録するための SQL を生成する Next.js アプリケーションです。教師と生徒のアカウント情報をブラウザ上で編集・貼り付けし、users テーブルおよび member 系テーブル向けの INSERT 文を一括作成できます。 | TypeScript |
 <!-- PROJECTS_END -->
+
+---
+
+<!-- LAST_UPDATED_START -->
+<!-- LAST_UPDATED_END -->

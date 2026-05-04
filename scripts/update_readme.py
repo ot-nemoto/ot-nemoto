@@ -1,6 +1,7 @@
 import os
 import re
 import requests
+from datetime import datetime, timezone
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 USERNAME = "ot-nemoto"
@@ -122,12 +123,18 @@ def update_section(content, marker, new_content):
     return re.sub(pattern, replacement, content, flags=re.DOTALL)
 
 
+def build_last_updated():
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    return f"_Last updated: {now}_"
+
+
 def main():
     with open(README_PATH, encoding="utf-8") as f:
         content = f.read()
 
     content = update_section(content, "TECH_STACK", build_tech_stack())
     content = update_section(content, "PROJECTS", build_projects())
+    content = update_section(content, "LAST_UPDATED", build_last_updated())
 
     with open(README_PATH, "w", encoding="utf-8") as f:
         f.write(content)
