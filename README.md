@@ -1,10 +1,3 @@
-# Hi there 👋
-
-TypeScript / Python でツールを作り、AI 活用を推進しています。  
-観光・データドメインの開発や技術書執筆にも取り組んでいます。
-
----
-
 ## 🛠 Tech Stack
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
@@ -13,15 +6,6 @@ TypeScript / Python でツールを作り、AI 活用を推進しています。
 ![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazon-aws&logoColor=white)
-
----
-
-## 📊 GitHub Stats
-
-<p align="left">
-  <img height="160" src="https://github-readme-stats.vercel.app/api?username=ot-nemoto&show_icons=true&theme=default&hide_border=true&count_private=true" />
-  <img height="160" src="https://github-readme-stats.vercel.app/api/top-langs/?username=ot-nemoto&layout=compact&theme=default&hide_border=true&langs_count=6" />
-</p>
 
 ---
 
