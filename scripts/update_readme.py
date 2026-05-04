@@ -1,7 +1,7 @@
 import os
 import re
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 USERNAME = "ot-nemoto"
@@ -124,7 +124,8 @@ def update_section(content, marker, new_content):
 
 
 def build_last_updated():
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    jst = timezone(timedelta(hours=9))
+    now = datetime.now(jst).strftime("%Y-%m-%d %H:%M JST")
     return f"_Last updated: {now}_"
 
 
