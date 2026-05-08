@@ -119,11 +119,12 @@ def build_projects():
     for repo in repos:
         name = repo["name"]
         desc = repo.get("description") or ""
-        lang = repo.get("language") or ""
         url = repo["html_url"]
-        rows.append(f"| [{name}]({url}) | {desc} | {lang} |")
+        homepage = repo.get("homepage") or ""
+        web = f"[🌐]({homepage})" if homepage else ""
+        rows.append(f"| [{name}]({url}) | {desc} | {web} |")
 
-    return "| Project | Description | Tech |\n|---|---|---|\n" + "\n".join(rows)
+    return "| Project | Description | |\n|---|---|---|\n" + "\n".join(rows)
 
 
 def build_writing():
