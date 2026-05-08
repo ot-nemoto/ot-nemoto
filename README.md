@@ -30,6 +30,13 @@
 
 ---
 
+## ✍️ Writing
+
+<!-- WRITING_START -->
+<!-- WRITING_END -->
+
+---
+
 <!-- LAST_UPDATED_START -->
 _Last updated: 2026-05-04 08:20 UTC_
 <!-- LAST_UPDATED_END -->

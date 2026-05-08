@@ -101,6 +101,15 @@ def build_tech_stack():
     return f"{badges}\n\n{table}"
 
 
+def get_writing_repos():
+    r = requests.get(
+        "https://api.github.com/search/repositories",
+        headers=HEADERS,
+        params={"q": f"user:{USERNAME} topic:writing", "per_page": 100, "sort": "updated"},
+    )
+    return r.json().get("items", [])
+
+
 def build_projects():
     repos = get_pick_repos()
     if not repos:
@@ -115,6 +124,21 @@ def build_projects():
         rows.append(f"| [{name}]({url}) | {desc} | {lang} |")
 
     return "| Project | Description | Tech |\n|---|---|---|\n" + "\n".join(rows)
+
+
+def build_writing():
+    repos = get_writing_repos()
+    if not repos:
+        return "_`writing` トピックが付いたリポジトリはありません。_"
+
+    rows = []
+    for repo in repos:
+        name = repo["name"]
+        desc = repo.get("description") or ""
+        url = repo["html_url"]
+        rows.append(f"| [{name}]({url}) | {desc} |")
+
+    return "| Project | Description |\n|---|---|\n" + "\n".join(rows)
 
 
 def update_section(content, marker, new_content):
@@ -135,6 +159,7 @@ def main():
 
     content = update_section(content, "TECH_STACK", build_tech_stack())
     content = update_section(content, "PROJECTS", build_projects())
+    content = update_section(content, "WRITING", build_writing())
     content = update_section(content, "LAST_UPDATED", build_last_updated())
 
     with open(README_PATH, "w", encoding="utf-8") as f:
