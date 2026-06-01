@@ -41,5 +41,5 @@
 ---
 
 <!-- LAST_UPDATED_START -->
-_Last updated: 2026-05-25 09:27 JST_
+_Last updated: 2026-06-01 09:29 JST_
 <!-- LAST_UPDATED_END -->
