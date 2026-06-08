@@ -5,9 +5,9 @@
 
 | Language | | Share |
 |---|---|---|
-| TypeScript | ███░░░░░░░ | 34.9% |
+| TypeScript | ████░░░░░░ | 35.3% |
 | HTML | █░░░░░░░░░ | 12.8% |
-| Python | █░░░░░░░░░ | 11.7% |
+| Python | █░░░░░░░░░ | 11.6% |
 | JavaScript | ░░░░░░░░░░ | 3.0% |
 | Shell | ░░░░░░░░░░ | 1.8% |
 | CSS | ░░░░░░░░░░ | 0.5% |
@@ -22,8 +22,8 @@
 <!-- PROJECTS_START -->
 | Project | Description | |
 |---|---|---|
-| [github-issue-viewer](https://github.com/ot-nemoto/github-issue-viewer) | 複数のGitHubリポジトリのIssueとPRを一画面で横断的に確認できるビューアです。GitHub Personal Access Tokenを設定するだけで利用可能。タイプ・ステータス・ラベルによるフィルタリング、リポジトリ単位のグループ表示・折りたたみに対応しています。 | [🌐](https://ot-nemoto.github.io/github-issue-viewer/) |
 | [classmethod-pricing-chart](https://github.com/ot-nemoto/classmethod-pricing-chart) | Classmethod社の AWS 請求レポート（monthly-report-YYYY-MM-ACCOUNTID.csv）をブラウザにドラッグ＆ドロップするだけで、アカウントやサービス別に月次コストを可視化できる Next.js 製アプリケーションです。複数アカウント・複数月の比較や年次集計をワンビューで確認できます。 | [🌐](https://ot-nemoto.github.io/classmethod-pricing-chart/) |
+| [github-issue-viewer](https://github.com/ot-nemoto/github-issue-viewer) | 複数のGitHubリポジトリのIssueとPRを一画面で横断的に確認できるビューアです。GitHub Personal Access Tokenを設定するだけで利用可能。タイプ・ステータス・ラベルによるフィルタリング、リポジトリ単位のグループ表示・折りたたみに対応しています。 | [🌐](https://ot-nemoto.github.io/github-issue-viewer/) |
 | [account-sql-generator](https://github.com/ot-nemoto/account-sql-generator) | 教育機関向けのユーザー/メンバーアカウントをまとめて登録するための SQL を生成する Next.js アプリケーションです。教師と生徒のアカウント情報をブラウザ上で編集・貼り付けし、users テーブルおよび member 系テーブル向けの INSERT 文を一括作成できます。 | [🌐](https://ot-nemoto.github.io/account-sql-generator/) |
 | [github-diff-viewer](https://github.com/ot-nemoto/github-diff-viewer) | GitHub 上の2つのファイルをリポジトリ・ブランチ・パスで指定するだけで差分を即座に表示できる Web アプリ。PAT によるプライベートリポジトリ対応、Split / Unified ビュー切替、URL 共有をサポート。 | [🌐](https://ot-nemoto.github.io/github-diff-viewer/) |
 <!-- PROJECTS_END -->
@@ -41,5 +41,5 @@
 ---
 
 <!-- LAST_UPDATED_START -->
-_Last updated: 2026-06-01 09:29 JST_
+_Last updated: 2026-06-08 09:32 JST_
 <!-- LAST_UPDATED_END -->
