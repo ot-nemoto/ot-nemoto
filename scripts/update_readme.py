@@ -3,6 +3,8 @@ import json
 import os
 import re
 import requests
+import tomllib
+from urllib.parse import quote
 from datetime import datetime, timezone, timedelta
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
@@ -56,7 +58,7 @@ FRAMEWORK_BADGE_MAP = {
     "Gin":          ("Gin",          "00ADD8", "go",          "white"),
 }
 
-# マニフェストファイル名 -> {依存パッケージ名: フレームワーク名}
+# package.json の依存名 -> フレームワーク名
 NPM_FRAMEWORKS = {
     "next": "Next.js",
     "nuxt": "Nuxt",
@@ -68,36 +70,53 @@ NPM_FRAMEWORKS = {
     "hono": "Hono",
     "electron": "Electron",
 }
+# Python のパッケージ名（正規化済み） -> フレームワーク名
 PYTHON_FRAMEWORKS = {
     "django": "Django",
     "flask": "Flask",
     "fastapi": "FastAPI",
     "streamlit": "Streamlit",
 }
-TEXT_MANIFEST_FRAMEWORKS = {
-    "requirements.txt": PYTHON_FRAMEWORKS,
-    "pyproject.toml":   PYTHON_FRAMEWORKS,
-    "Pipfile":          PYTHON_FRAMEWORKS,
-    "pom.xml":          {"spring-boot": "Spring Boot"},
-    "build.gradle":     {"spring-boot": "Spring Boot"},
-    "build.gradle.kts": {"spring-boot": "Spring Boot"},
-    "Gemfile":          {"rails": "Rails"},
-    "composer.json":    {"laravel/framework": "Laravel"},
-    "go.mod":           {"github.com/gin-gonic/gin": "Gin"},
+COMPOSER_FRAMEWORKS = {"laravel/framework": "Laravel"}
+SPRING_BOOT_PATTERN = r"spring-boot-starter|org\.springframework\.boot"
+# 行単位で判定するマニフェスト: ファイル名 -> [(正規表現, フレームワーク名)]
+LINE_MANIFEST_FRAMEWORKS = {
+    "pom.xml":          [(SPRING_BOOT_PATTERN, "Spring Boot")],
+    "build.gradle":     [(SPRING_BOOT_PATTERN, "Spring Boot")],
+    "build.gradle.kts": [(SPRING_BOOT_PATTERN, "Spring Boot")],
+    "Gemfile":          [(r"^\s*gem\s+[\"']rails[\"']", "Rails")],
+    "go.mod":           [(r"^\s*(require\s+)?github\.com/gin-gonic/gin\s", "Gin")],
 }
-MANIFEST_NAMES = {"package.json"} | set(TEXT_MANIFEST_FRAMEWORKS)
-IGNORED_DIRS = {"node_modules", "vendor", ".venv", "venv", "dist", "build"}
+MANIFEST_NAMES = (
+    {"package.json", "requirements.txt", "Pipfile", "pyproject.toml", "composer.json"}
+    | set(LINE_MANIFEST_FRAMEWORKS)
+)
+# 依存パッケージやサンプル・テスト用のディレクトリは集計しない
+IGNORED_DIRS = {
+    "node_modules", "vendor", ".venv", "venv", "dist", "build",
+    "example", "examples", "test", "tests", "__tests__", "fixtures", "templates", "docs",
+}
+
+
+def api_get(url, params=None, allowed_statuses=()):
+    """GitHub API を呼ぶ。allowed_statuses のときは None、それ以外のエラーは例外にする。
+
+    レート制限などで途中のデータが欠けたまま README を更新しないよう、想定外のエラーでは処理を止める。
+    """
+    r = requests.get(url, headers=HEADERS, params=params)
+    if r.status_code in allowed_statuses:
+        return None
+    r.raise_for_status()
+    return r.json()
 
 
 def get_all_repos():
     repos, page = [], 1
     while True:
-        r = requests.get(
+        data = api_get(
             f"https://api.github.com/users/{USERNAME}/repos",
-            headers=HEADERS,
             params={"per_page": 100, "page": page, "type": "owner"},
         )
-        data = r.json()
         if not data:
             break
         repos.extend(data)
@@ -108,85 +127,143 @@ def get_all_repos():
 
 
 def get_languages(repo_name):
-    r = requests.get(
-        f"https://api.github.com/repos/{USERNAME}/{repo_name}/languages",
-        headers=HEADERS,
-    )
-    return r.json() if r.status_code == 200 else {}
+    return api_get(
+        f"https://api.github.com/repos/{USERNAME}/{quote(repo_name)}/languages",
+        allowed_statuses=(404,),
+    ) or {}
 
 
-def get_manifest_paths(repo):
+def get_manifests(repo):
+    """リポジトリ内のマニフェストファイルを [(ファイル名, blob の SHA)] で返す"""
     branch = repo.get("default_branch")
     if not branch:
         return []
-    r = requests.get(
-        f"https://api.github.com/repos/{USERNAME}/{repo['name']}/git/trees/{branch}",
-        headers=HEADERS,
+    # 空のリポジトリは 409 になる
+    data = api_get(
+        f"https://api.github.com/repos/{USERNAME}/{quote(repo['name'])}/git/trees/{quote(branch, safe='')}",
         params={"recursive": "1"},
+        allowed_statuses=(404, 409),
     )
-    if r.status_code != 200:
+    if not data:
         return []
-    paths = []
-    for item in r.json().get("tree", []):
+    if data.get("truncated"):
+        print(f"warning: tree of {repo['name']} is truncated; some manifests may be missed")
+    manifests = []
+    for item in data.get("tree", []):
         if item.get("type") != "blob":
             continue
         parts = item["path"].split("/")
         if parts[-1] in MANIFEST_NAMES and not IGNORED_DIRS & set(parts[:-1]):
-            paths.append(item["path"])
-    return paths
+            manifests.append((parts[-1], item["sha"]))
+    return manifests
 
 
-def get_file_text(repo_name, path):
-    r = requests.get(
-        f"https://api.github.com/repos/{USERNAME}/{repo_name}/contents/{path}",
-        headers=HEADERS,
-    )
-    if r.status_code != 200:
-        return ""
-    data = r.json()
+def get_blob_text(repo_name, sha):
+    data = api_get(f"https://api.github.com/repos/{USERNAME}/{quote(repo_name)}/git/blobs/{sha}")
     if data.get("encoding") != "base64":
         return ""
-    return base64.b64decode(data["content"]).decode("utf-8", errors="ignore")
+    return base64.b64decode(data["content"]).decode("utf-8-sig", errors="ignore")
+
+
+def normalize_python_name(requirement):
+    """'Flask[async]>=3.0' のような依存指定からパッケージ名を取り出す"""
+    m = re.match(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)", requirement)
+    return re.sub(r"[-_.]+", "-", m.group(1)).lower() if m else ""
+
+
+def get_pyproject_dependencies(data):
+    names = []
+    project = data.get("project", {})
+    names += project.get("dependencies", [])
+    for group in project.get("optional-dependencies", {}).values():
+        names += group
+    for group in data.get("dependency-groups", {}).values():
+        names += [d for d in group if isinstance(d, str)]
+    poetry = data.get("tool", {}).get("poetry", {})
+    names += list(poetry.get("dependencies", {}))
+    names += list(poetry.get("dev-dependencies", {}))
+    for group in poetry.get("group", {}).values():
+        names += list(group.get("dependencies", {}))
+    return {normalize_python_name(n) for n in names if isinstance(n, str)}
+
+
+def get_python_dependencies(filename, text):
+    if filename == "pyproject.toml":
+        try:
+            return get_pyproject_dependencies(tomllib.loads(text))
+        except (tomllib.TOMLDecodeError, AttributeError, TypeError):
+            return set()
+    if filename == "Pipfile":
+        try:
+            data = tomllib.loads(text)
+        except tomllib.TOMLDecodeError:
+            return set()
+        names = list(data.get("packages", {})) + list(data.get("dev-packages", {}))
+        return {normalize_python_name(n) for n in names}
+    # requirements.txt: コメントとオプション行（-r, -e など）を除いた各行の先頭がパッケージ名
+    names = set()
+    for line in text.splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line and not line.startswith("-"):
+            names.add(normalize_python_name(line))
+    return names
+
+
+def load_json_object(text):
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def get_json_dependencies(data, keys):
+    deps = set()
+    for key in keys:
+        if isinstance(data.get(key), dict):
+            deps |= set(data[key])
+    return deps
 
 
 def detect_frameworks_in_manifest(filename, text):
-    found = set()
     if filename == "package.json":
-        try:
-            pkg = json.loads(text)
-        except json.JSONDecodeError:
-            return found
-        deps = {}
-        for key in ("dependencies", "devDependencies", "peerDependencies"):
-            if isinstance(pkg.get(key), dict):
-                deps.update(pkg[key])
-        for dep, fw in NPM_FRAMEWORKS.items():
-            if dep in deps:
-                found.add(fw)
-        return found
+        deps = get_json_dependencies(
+            load_json_object(text), ("dependencies", "devDependencies", "peerDependencies")
+        )
+        return {fw for dep, fw in NPM_FRAMEWORKS.items() if dep in deps}
 
-    lowered = text.lower()
-    for dep, fw in TEXT_MANIFEST_FRAMEWORKS.get(filename, {}).items():
-        if re.search(rf"(?<![\w.-]){re.escape(dep)}(?![\w-])", lowered):
-            found.add(fw)
+    if filename == "composer.json":
+        deps = get_json_dependencies(load_json_object(text), ("require", "require-dev"))
+        return {fw for dep, fw in COMPOSER_FRAMEWORKS.items() if dep in deps}
+
+    if filename in ("requirements.txt", "Pipfile", "pyproject.toml"):
+        deps = get_python_dependencies(filename, text)
+        return {fw for dep, fw in PYTHON_FRAMEWORKS.items() if dep in deps}
+
+    found = set()
+    for line in text.splitlines():
+        # コメント行と、go.mod の間接依存は除く
+        stripped = line.strip()
+        if stripped.startswith(("#", "//", "<!--")) or stripped.endswith("// indirect"):
+            continue
+        for pattern, fw in LINE_MANIFEST_FRAMEWORKS.get(filename, []):
+            if re.search(pattern, line):
+                found.add(fw)
     return found
 
 
 def get_frameworks(repo):
     found = set()
-    for path in get_manifest_paths(repo):
-        filename = path.rsplit("/", 1)[-1]
-        found |= detect_frameworks_in_manifest(filename, get_file_text(repo["name"], path))
+    for filename, sha in get_manifests(repo):
+        found |= detect_frameworks_in_manifest(filename, get_blob_text(repo["name"], sha))
     return found
 
 
 def get_pick_repos():
-    r = requests.get(
+    return api_get(
         "https://api.github.com/search/repositories",
-        headers=HEADERS,
         params={"q": f"user:{USERNAME} topic:pick", "per_page": 100, "sort": "updated"},
-    )
-    return r.json().get("items", [])
+    ).get("items", [])
 
 
 def make_badge(name, badge_map):
@@ -249,7 +326,10 @@ def build_languages(repos):
 
 def build_frameworks(repos):
     fw_repos: dict[str, int] = {}
+    # フォークは他人のコードなのでフレームワークの集計から除く
     for repo in repos:
+        if repo.get("fork"):
+            continue
         for fw in get_frameworks(repo):
             fw_repos[fw] = fw_repos.get(fw, 0) + 1
 
@@ -273,12 +353,10 @@ def build_tech_stack():
 
 
 def get_writing_repos():
-    r = requests.get(
+    return api_get(
         "https://api.github.com/search/repositories",
-        headers=HEADERS,
         params={"q": f"user:{USERNAME} topic:writing", "per_page": 100, "sort": "updated"},
-    )
-    return r.json().get("items", [])
+    ).get("items", [])
 
 
 def build_projects():
