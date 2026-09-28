@@ -38,7 +38,6 @@ NON_LANGUAGES = {"Vue", "Svelte", "Astro"}
 
 FRAMEWORK_BADGE_MAP = {
     "Next.js":      ("Next.js",      "000000", "nextdotjs",   "white"),
-    "React":        ("React",        "61DAFB", "react",       "black"),
     "Vue.js":       ("Vue.js",       "4FC08D", "vuedotjs",    "white"),
     "Nuxt":         ("Nuxt",         "00DC82", "nuxt",        "white"),
     "Angular":      ("Angular",      "DD0031", "angular",     "white"),
@@ -48,8 +47,6 @@ FRAMEWORK_BADGE_MAP = {
     "NestJS":       ("NestJS",       "E0234E", "nestjs",      "white"),
     "Hono":         ("Hono",         "E36002", "hono",        "white"),
     "Electron":     ("Electron",     "47848F", "electron",    "white"),
-    "Tailwind CSS": ("Tailwind CSS", "06B6D4", "tailwindcss", "white"),
-    "Bootstrap":    ("Bootstrap",    "7952B3", "bootstrap",   "white"),
     "Django":       ("Django",       "092E20", "django",      "white"),
     "Flask":        ("Flask",        "000000", "flask",       "white"),
     "FastAPI":      ("FastAPI",      "009688", "fastapi",     "white"),
@@ -63,7 +60,6 @@ FRAMEWORK_BADGE_MAP = {
 # マニフェストファイル名 -> {依存パッケージ名: フレームワーク名}
 NPM_FRAMEWORKS = {
     "next": "Next.js",
-    "react": "React",
     "vue": "Vue.js",
     "nuxt": "Nuxt",
     "@angular/core": "Angular",
@@ -73,8 +69,6 @@ NPM_FRAMEWORKS = {
     "@nestjs/core": "NestJS",
     "hono": "Hono",
     "electron": "Electron",
-    "tailwindcss": "Tailwind CSS",
-    "bootstrap": "Bootstrap",
 }
 PYTHON_FRAMEWORKS = {
     "django": "Django",
