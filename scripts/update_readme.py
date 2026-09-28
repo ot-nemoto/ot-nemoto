@@ -257,7 +257,8 @@ def collect_languages(repos):
     top = [(l, b) for l, b in top_n(lang_bytes, TOP_LANGS) if b / total * 100 >= MIN_SHARE_PCT]
     other = total - sum(b for _, b in top)
     items = [(l, round(b / total * 100, 1)) for l, b in top]
-    if other > 0:
+    # 丸めて 0.0% になるほど小さい「Other」は出さない
+    if round(other / total * 100, 1) > 0:
         items.append(("Other", round(other / total * 100, 1)))
     return items
 
@@ -285,8 +286,7 @@ def build_tech_stack():
             f.write(tech_stack_svg.render(theme, languages, frameworks))
 
     # 画像を読めない環境向けに、内容を代替テキストにも入れる
-    alt = "Languages: " + ", ".join(f"{l} {v:.1f}%" for l, v in languages)
-    alt += " / Frameworks: " + ", ".join(f"{f} {n}" for f, n in frameworks)
+    alt = tech_stack_svg.describe(languages, frameworks)
     return (
         "<picture>\n"
         f'  <source media="(prefers-color-scheme: dark)" srcset="{ASSETS_DIR}/tech-stack-dark.svg">\n'
@@ -336,8 +336,13 @@ def build_writing():
 
 def update_section(content, marker, new_content):
     pattern = rf"(<!-- {marker}_START -->).*?(<!-- {marker}_END -->)"
-    replacement = rf"\1\n{new_content}\n\2"
-    return re.sub(pattern, replacement, content, flags=re.DOTALL)
+    # new_content を置換テンプレートとして解釈させない（説明文にバックスラッシュが含まれても壊れないように）
+    return re.sub(
+        pattern,
+        lambda m: f"{m.group(1)}\n{new_content}\n{m.group(2)}",
+        content,
+        flags=re.DOTALL,
+    )
 
 
 def build_last_updated():
