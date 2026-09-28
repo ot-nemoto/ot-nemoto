@@ -1,12 +1,26 @@
+import base64
+import json
 import os
 import re
 import requests
+import tomllib
+from urllib.parse import quote
 from datetime import datetime, timezone, timedelta
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 USERNAME = "ot-nemoto"
 README_PATH = "README.md"
 TOP_LANGS = 8
+TOP_FRAMEWORKS = 8
+# これ未満の割合の言語は「Other」にまとめる（Mermaid は 1% 未満の扇形を描かないため）
+MIN_SLICE_PCT = 1.0
+OTHER_COLOR = "8C959F"
+# バッジの色がない・暗すぎる・他と重複する場合に使う代替色（ライト・ダークどちらの背景でも見える明るさ）
+FALLBACK_COLORS = ["8250DF", "BF3989", "0969DA", "1A7F37", "B08800", "CF222E", "BC4C00", "6E7781"]
+# 暗い背景で沈む色（ブランドカラーの黒など）とみなす相対輝度の上限
+MIN_LUMINANCE = 0.03
+# 円グラフの文字色。GitHub のライト・ダークどちらでも読める中間のグレーにする
+CHART_TEXT_COLOR = "#8C959F"
 
 HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -14,7 +28,7 @@ HEADERS = {
     "X-GitHub-Api-Version": "2022-11-28",
 }
 
-BADGE_MAP = {
+LANGUAGE_BADGE_MAP = {
     "TypeScript": ("TypeScript", "3178C6", "typescript",   "white"),
     "Python":     ("Python",     "3776AB", "python",       "white"),
     "JavaScript": ("JavaScript", "F7DF1E", "javascript",   "black"),
@@ -24,20 +38,98 @@ BADGE_MAP = {
     "Rust":       ("Rust",       "000000", "rust",         "white"),
     "Java":       ("Java",       "007396", "openjdk",      "white"),
     "Shell":      ("Shell",      "4EAA25", "gnubash",      "white"),
-    "Vue":        ("Vue.js",     "4FC08D", "vuedotjs",     "white"),
     "Dockerfile": ("Docker",     "2496ED", "docker",       "white"),
+    "Ruby":       ("Ruby",       "CC342D", "ruby",         "white"),
+    "PHP":        ("PHP",        "777BB4", "php",          "white"),
+    "Kotlin":     ("Kotlin",     "7F52FF", "kotlin",       "white"),
+    "Scala":      ("Scala",      "DC322F", "scala",        "white"),
+    "C#":         ("C#",         "512BD4", "dotnet",       "white"),
+    "HCL":        ("HCL",        "844FBA", "terraform",    "white"),
+    "Jupyter Notebook": ("Jupyter", "F37626", "jupyter",   "white"),
 }
+
+# GitHub の言語集計に含まれるが、言語ではなくフレームワークとして扱うもの
+NON_LANGUAGES = {"Vue", "Svelte", "Astro"}
+
+FRAMEWORK_BADGE_MAP = {
+    "Next.js":      ("Next.js",      "000000", "nextdotjs",   "white"),
+    "Nuxt":         ("Nuxt",         "00DC82", "nuxt",        "white"),
+    "Angular":      ("Angular",      "DD0031", "angular",     "white"),
+    "Svelte":       ("Svelte",       "FF3E00", "svelte",      "white"),
+    "Astro":        ("Astro",        "BC52EE", "astro",       "white"),
+    "Express":      ("Express",      "000000", "express",     "white"),
+    "NestJS":       ("NestJS",       "E0234E", "nestjs",      "white"),
+    "Hono":         ("Hono",         "E36002", "hono",        "white"),
+    "Electron":     ("Electron",     "47848F", "electron",    "white"),
+    "Django":       ("Django",       "092E20", "django",      "white"),
+    "Flask":        ("Flask",        "000000", "flask",       "white"),
+    "FastAPI":      ("FastAPI",      "009688", "fastapi",     "white"),
+    "Streamlit":    ("Streamlit",    "FF4B4B", "streamlit",   "white"),
+    "Spring Boot":  ("Spring Boot",  "6DB33F", "springboot",  "white"),
+    "Rails":        ("Rails",        "D30001", "rubyonrails", "white"),
+    "Laravel":      ("Laravel",      "FF2D20", "laravel",     "white"),
+    "Gin":          ("Gin",          "00ADD8", "go",          "white"),
+}
+
+# package.json の依存名 -> フレームワーク名
+NPM_FRAMEWORKS = {
+    "next": "Next.js",
+    "nuxt": "Nuxt",
+    "@angular/core": "Angular",
+    "svelte": "Svelte",
+    "astro": "Astro",
+    "express": "Express",
+    "@nestjs/core": "NestJS",
+    "hono": "Hono",
+    "electron": "Electron",
+}
+# Python のパッケージ名（正規化済み） -> フレームワーク名
+PYTHON_FRAMEWORKS = {
+    "django": "Django",
+    "flask": "Flask",
+    "fastapi": "FastAPI",
+    "streamlit": "Streamlit",
+}
+COMPOSER_FRAMEWORKS = {"laravel/framework": "Laravel"}
+SPRING_BOOT_PATTERN = r"spring-boot-starter|org\.springframework\.boot"
+# 行単位で判定するマニフェスト: ファイル名 -> [(正規表現, フレームワーク名)]
+LINE_MANIFEST_FRAMEWORKS = {
+    "pom.xml":          [(SPRING_BOOT_PATTERN, "Spring Boot")],
+    "build.gradle":     [(SPRING_BOOT_PATTERN, "Spring Boot")],
+    "build.gradle.kts": [(SPRING_BOOT_PATTERN, "Spring Boot")],
+    "Gemfile":          [(r"^\s*gem\s+[\"']rails[\"']", "Rails")],
+    "go.mod":           [(r"^\s*(require\s+)?github\.com/gin-gonic/gin\s", "Gin")],
+}
+MANIFEST_NAMES = (
+    {"package.json", "requirements.txt", "Pipfile", "pyproject.toml", "composer.json"}
+    | set(LINE_MANIFEST_FRAMEWORKS)
+)
+# 依存パッケージやサンプル・テスト用のディレクトリは集計しない
+IGNORED_DIRS = {
+    "node_modules", "vendor", ".venv", "venv", "dist", "build",
+    "example", "examples", "test", "tests", "__tests__", "fixtures", "templates", "docs",
+}
+
+
+def api_get(url, params=None, allowed_statuses=()):
+    """GitHub API を呼ぶ。allowed_statuses のときは None、それ以外のエラーは例外にする。
+
+    レート制限などで途中のデータが欠けたまま README を更新しないよう、想定外のエラーでは処理を止める。
+    """
+    r = requests.get(url, headers=HEADERS, params=params)
+    if r.status_code in allowed_statuses:
+        return None
+    r.raise_for_status()
+    return r.json()
 
 
 def get_all_repos():
     repos, page = [], 1
     while True:
-        r = requests.get(
+        data = api_get(
             f"https://api.github.com/users/{USERNAME}/repos",
-            headers=HEADERS,
             params={"per_page": 100, "page": page, "type": "owner"},
         )
-        data = r.json()
         if not data:
             break
         repos.extend(data)
@@ -48,66 +140,264 @@ def get_all_repos():
 
 
 def get_languages(repo_name):
-    r = requests.get(
-        f"https://api.github.com/repos/{USERNAME}/{repo_name}/languages",
-        headers=HEADERS,
+    return api_get(
+        f"https://api.github.com/repos/{USERNAME}/{quote(repo_name)}/languages",
+        allowed_statuses=(404,),
+    ) or {}
+
+
+def get_manifests(repo):
+    """リポジトリ内のマニフェストファイルを [(ファイル名, blob の SHA)] で返す"""
+    branch = repo.get("default_branch")
+    if not branch:
+        return []
+    # 空のリポジトリは 409 になる
+    data = api_get(
+        f"https://api.github.com/repos/{USERNAME}/{quote(repo['name'])}/git/trees/{quote(branch, safe='')}",
+        params={"recursive": "1"},
+        allowed_statuses=(404, 409),
     )
-    return r.json() if r.status_code == 200 else {}
+    if not data:
+        return []
+    if data.get("truncated"):
+        print(f"warning: tree of {repo['name']} is truncated; some manifests may be missed")
+    manifests = []
+    for item in data.get("tree", []):
+        if item.get("type") != "blob":
+            continue
+        parts = item["path"].split("/")
+        if parts[-1] in MANIFEST_NAMES and not IGNORED_DIRS & set(parts[:-1]):
+            manifests.append((parts[-1], item["sha"]))
+    return manifests
+
+
+def get_blob_text(repo_name, sha):
+    data = api_get(f"https://api.github.com/repos/{USERNAME}/{quote(repo_name)}/git/blobs/{sha}")
+    if data.get("encoding") != "base64":
+        return ""
+    return base64.b64decode(data["content"]).decode("utf-8-sig", errors="ignore")
+
+
+def normalize_python_name(requirement):
+    """'Flask[async]>=3.0' のような依存指定からパッケージ名を取り出す"""
+    m = re.match(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)", requirement)
+    return re.sub(r"[-_.]+", "-", m.group(1)).lower() if m else ""
+
+
+def get_pyproject_dependencies(data):
+    names = []
+    project = data.get("project", {})
+    names += project.get("dependencies", [])
+    for group in project.get("optional-dependencies", {}).values():
+        names += group
+    for group in data.get("dependency-groups", {}).values():
+        names += [d for d in group if isinstance(d, str)]
+    poetry = data.get("tool", {}).get("poetry", {})
+    names += list(poetry.get("dependencies", {}))
+    names += list(poetry.get("dev-dependencies", {}))
+    for group in poetry.get("group", {}).values():
+        names += list(group.get("dependencies", {}))
+    return {normalize_python_name(n) for n in names if isinstance(n, str)}
+
+
+def get_python_dependencies(filename, text):
+    if filename == "pyproject.toml":
+        try:
+            return get_pyproject_dependencies(tomllib.loads(text))
+        except (tomllib.TOMLDecodeError, AttributeError, TypeError):
+            return set()
+    if filename == "Pipfile":
+        try:
+            data = tomllib.loads(text)
+        except tomllib.TOMLDecodeError:
+            return set()
+        names = list(data.get("packages", {})) + list(data.get("dev-packages", {}))
+        return {normalize_python_name(n) for n in names}
+    # requirements.txt: コメントとオプション行（-r, -e など）を除いた各行の先頭がパッケージ名
+    names = set()
+    for line in text.splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line and not line.startswith("-"):
+            names.add(normalize_python_name(line))
+    return names
+
+
+def load_json_object(text):
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def get_json_dependencies(data, keys):
+    deps = set()
+    for key in keys:
+        if isinstance(data.get(key), dict):
+            deps |= set(data[key])
+    return deps
+
+
+def detect_frameworks_in_manifest(filename, text):
+    if filename == "package.json":
+        deps = get_json_dependencies(
+            load_json_object(text), ("dependencies", "devDependencies", "peerDependencies")
+        )
+        return {fw for dep, fw in NPM_FRAMEWORKS.items() if dep in deps}
+
+    if filename == "composer.json":
+        deps = get_json_dependencies(load_json_object(text), ("require", "require-dev"))
+        return {fw for dep, fw in COMPOSER_FRAMEWORKS.items() if dep in deps}
+
+    if filename in ("requirements.txt", "Pipfile", "pyproject.toml"):
+        deps = get_python_dependencies(filename, text)
+        return {fw for dep, fw in PYTHON_FRAMEWORKS.items() if dep in deps}
+
+    found = set()
+    for line in text.splitlines():
+        # コメント行と、go.mod の間接依存は除く
+        stripped = line.strip()
+        if stripped.startswith(("#", "//", "<!--")) or stripped.endswith("// indirect"):
+            continue
+        for pattern, fw in LINE_MANIFEST_FRAMEWORKS.get(filename, []):
+            if re.search(pattern, line):
+                found.add(fw)
+    return found
+
+
+def get_frameworks(repo):
+    found = set()
+    for filename, sha in get_manifests(repo):
+        found |= detect_frameworks_in_manifest(filename, get_blob_text(repo["name"], sha))
+    return found
 
 
 def get_pick_repos():
-    r = requests.get(
+    return api_get(
         "https://api.github.com/search/repositories",
-        headers=HEADERS,
         params={"q": f"user:{USERNAME} topic:pick", "per_page": 100, "sort": "updated"},
-    )
-    return r.json().get("items", [])
+    ).get("items", [])
 
 
-def make_badge(lang):
-    if lang not in BADGE_MAP:
+def make_badge(name, badge_map):
+    if name not in badge_map:
         return None
-    label, color, logo, font_color = BADGE_MAP[lang]
-    return f"![{label}](https://img.shields.io/badge/{label}-{color}?style=flat-square&logo={logo}&logoColor={font_color})"
+    label, color, logo, font_color = badge_map[name]
+    return f"![{label}](https://img.shields.io/badge/{quote(label.replace(' ', '_'))}-{color}?style=flat-square&logo={logo}&logoColor={font_color})"
 
 
-def make_progress_bar(pct, width=10):
-    filled = round(pct / 100 * width)
-    return "█" * filled + "░" * (width - filled)
+def relative_luminance(hex_color):
+    def channel(c):
+        c = int(c, 16) / 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = (channel(hex_color[i:i + 2]) for i in (0, 2, 4))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
-def build_tech_stack():
-    repos = get_all_repos()
+def pick_slice_colors(names, badge_map):
+    """各項目の色を決める。バッジの色が使えないときは代替色を順に割り当てる"""
+    fallbacks = iter(FALLBACK_COLORS)
+    colors, used = [], set()
+    for name in names:
+        if name == "Other":
+            color = OTHER_COLOR
+        else:
+            color = badge_map[name][1] if name in badge_map else None
+            if color is None or color in used or relative_luminance(color) < MIN_LUMINANCE:
+                color = next((c for c in fallbacks if c not in used), OTHER_COLOR)
+        used.add(color)
+        colors.append(color)
+    return colors
+
+
+def make_pie_chart(title, items, badge_map):
+    """items: [(name, value)] を値の降順で Mermaid の円グラフにする（「Other」は最後）"""
+    items = sorted(items, key=lambda x: (x[0] == "Other", -x[1]))
+    theme = {
+        "pieTitleTextColor": CHART_TEXT_COLOR,
+        "pieLegendTextColor": CHART_TEXT_COLOR,
+        # 扇形は不透明にして暗い背景でも沈まないようにする。
+        # 扇形内の % 表示は小さい扇形で重なるため出さず、値は凡例（showData）で示す
+        "pieOpacity": "1",
+        "pieSectionTextSize": "0px",
+        "pieStrokeColor": CHART_TEXT_COLOR,
+        "pieOuterStrokeColor": CHART_TEXT_COLOR,
+    }
+    for i, color in enumerate(pick_slice_colors([n for n, _ in items], badge_map), start=1):
+        theme[f"pie{i}"] = f"#{color}"
+    init = json.dumps({"theme": "base", "themeVariables": theme})
+    lines = [
+        "```mermaid",
+        f"%%{{init: {init}}}%%",
+        f"pie showData title {title}",
+    ]
+    lines += [f'    "{name}" : {value}' for name, value in items]
+    lines.append("```")
+    return "\n".join(lines)
+
+
+def top_n(counts, limit):
+    # 同じ値のときは名前順にして、実行ごとに並びが変わらないようにする
+    return sorted(counts.items(), key=lambda x: (-x[1], x[0]))[:limit]
+
+
+def build_languages(repos):
     lang_bytes: dict[str, int] = {}
     for repo in repos:
         for lang, b in get_languages(repo["name"]).items():
+            if lang in NON_LANGUAGES:
+                continue
             lang_bytes[lang] = lang_bytes.get(lang, 0) + b
 
     total = sum(lang_bytes.values())
     if total == 0:
-        return ""
+        return "_言語データがありません。_"
 
-    sorted_langs = sorted(lang_bytes.items(), key=lambda x: x[1], reverse=True)
-    top = [(l, b) for l, b in sorted_langs if make_badge(l)][:TOP_LANGS]
+    # バッジの有無に関係なく、バイト数の多い順に並べる。小さすぎる言語は「Other」にまとめる
+    top = [(l, b) for l, b in top_n(lang_bytes, TOP_LANGS) if b / total * 100 >= MIN_SLICE_PCT]
+    other = total - sum(b for _, b in top)
+    badges = " ".join(filter(None, (make_badge(l, LANGUAGE_BADGE_MAP) for l, _ in top)))
 
-    badges = " ".join(make_badge(l) for l, _ in top)
+    items = [(l, round(b / total * 100, 1)) for l, b in top]
+    if other > 0:
+        items.append(("Other", round(other / total * 100, 1)))
+    chart = make_pie_chart("Languages (%)", items, LANGUAGE_BADGE_MAP)
+    return f"{badges}\n\n{chart}" if badges else chart
 
-    rows = []
-    for lang, b in top:
-        pct = b / total * 100
-        rows.append(f"| {lang} | {make_progress_bar(pct)} | {pct:.1f}% |")
 
-    table = "| Language | | Share |\n|---|---|---|\n" + "\n".join(rows)
-    return f"{badges}\n\n{table}"
+def build_frameworks(repos):
+    fw_repos: dict[str, int] = {}
+    # フォークは他人のコードなのでフレームワークの集計から除く
+    for repo in repos:
+        if repo.get("fork"):
+            continue
+        for fw in get_frameworks(repo):
+            fw_repos[fw] = fw_repos.get(fw, 0) + 1
+
+    if not fw_repos:
+        return "_フレームワークは検出されませんでした。_"
+
+    top = top_n(fw_repos, TOP_FRAMEWORKS)
+    badges = " ".join(filter(None, (make_badge(f, FRAMEWORK_BADGE_MAP) for f, _ in top)))
+    chart = make_pie_chart("Frameworks (repositories)", top, FRAMEWORK_BADGE_MAP)
+    return f"{badges}\n\n{chart}"
+
+
+def build_tech_stack():
+    repos = get_all_repos()
+    return (
+        "### Languages\n\n"
+        f"{build_languages(repos)}\n\n"
+        "### Frameworks\n\n"
+        f"{build_frameworks(repos)}"
+    )
 
 
 def get_writing_repos():
-    r = requests.get(
+    return api_get(
         "https://api.github.com/search/repositories",
-        headers=HEADERS,
         params={"q": f"user:{USERNAME} topic:writing", "per_page": 100, "sort": "updated"},
-    )
-    return r.json().get("items", [])
+    ).get("items", [])
 
 
 def build_projects():
