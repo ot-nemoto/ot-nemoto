@@ -1,4 +1,5 @@
 import base64
+import html
 import json
 import os
 import re
@@ -7,20 +8,16 @@ import tomllib
 from urllib.parse import quote
 from datetime import datetime, timezone, timedelta
 
+import tech_stack_svg
+
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 USERNAME = "ot-nemoto"
 README_PATH = "README.md"
-TOP_LANGS = 8
+ASSETS_DIR = "assets"
+TOP_LANGS = tech_stack_svg.MAX_SERIES
 TOP_FRAMEWORKS = 8
-# これ未満の割合の言語は「Other」にまとめる（Mermaid は 1% 未満の扇形を描かないため）
-MIN_SLICE_PCT = 1.0
-OTHER_COLOR = "8C959F"
-# バッジの色がない・暗すぎる・他と重複する場合に使う代替色（ライト・ダークどちらの背景でも見える明るさ）
-FALLBACK_COLORS = ["8250DF", "BF3989", "0969DA", "1A7F37", "B08800", "CF222E", "BC4C00", "6E7781"]
-# 暗い背景で沈む色（ブランドカラーの黒など）とみなす相対輝度の上限
-MIN_LUMINANCE = 0.03
-# 円グラフの文字色。GitHub のライト・ダークどちらでも読める中間のグレーにする
-CHART_TEXT_COLOR = "#8C959F"
+# これ未満の割合の言語は「Other」にまとめる（積み上げバーで見えないため）
+MIN_SHARE_PCT = 1.0
 
 HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -28,48 +25,8 @@ HEADERS = {
     "X-GitHub-Api-Version": "2022-11-28",
 }
 
-LANGUAGE_BADGE_MAP = {
-    "TypeScript": ("TypeScript", "3178C6", "typescript",   "white"),
-    "Python":     ("Python",     "3776AB", "python",       "white"),
-    "JavaScript": ("JavaScript", "F7DF1E", "javascript",   "black"),
-    "HTML":       ("HTML",       "E34F26", "html5",        "white"),
-    "CSS":        ("CSS",        "1572B6", "css3",         "white"),
-    "Go":         ("Go",         "00ADD8", "go",           "white"),
-    "Rust":       ("Rust",       "000000", "rust",         "white"),
-    "Java":       ("Java",       "007396", "openjdk",      "white"),
-    "Shell":      ("Shell",      "4EAA25", "gnubash",      "white"),
-    "Dockerfile": ("Docker",     "2496ED", "docker",       "white"),
-    "Ruby":       ("Ruby",       "CC342D", "ruby",         "white"),
-    "PHP":        ("PHP",        "777BB4", "php",          "white"),
-    "Kotlin":     ("Kotlin",     "7F52FF", "kotlin",       "white"),
-    "Scala":      ("Scala",      "DC322F", "scala",        "white"),
-    "C#":         ("C#",         "512BD4", "dotnet",       "white"),
-    "HCL":        ("HCL",        "844FBA", "terraform",    "white"),
-    "Jupyter Notebook": ("Jupyter", "F37626", "jupyter",   "white"),
-}
-
 # GitHub の言語集計に含まれるが、言語ではなくフレームワークとして扱うもの
 NON_LANGUAGES = {"Vue", "Svelte", "Astro"}
-
-FRAMEWORK_BADGE_MAP = {
-    "Next.js":      ("Next.js",      "000000", "nextdotjs",   "white"),
-    "Nuxt":         ("Nuxt",         "00DC82", "nuxt",        "white"),
-    "Angular":      ("Angular",      "DD0031", "angular",     "white"),
-    "Svelte":       ("Svelte",       "FF3E00", "svelte",      "white"),
-    "Astro":        ("Astro",        "BC52EE", "astro",       "white"),
-    "Express":      ("Express",      "000000", "express",     "white"),
-    "NestJS":       ("NestJS",       "E0234E", "nestjs",      "white"),
-    "Hono":         ("Hono",         "E36002", "hono",        "white"),
-    "Electron":     ("Electron",     "47848F", "electron",    "white"),
-    "Django":       ("Django",       "092E20", "django",      "white"),
-    "Flask":        ("Flask",        "000000", "flask",       "white"),
-    "FastAPI":      ("FastAPI",      "009688", "fastapi",     "white"),
-    "Streamlit":    ("Streamlit",    "FF4B4B", "streamlit",   "white"),
-    "Spring Boot":  ("Spring Boot",  "6DB33F", "springboot",  "white"),
-    "Rails":        ("Rails",        "D30001", "rubyonrails", "white"),
-    "Laravel":      ("Laravel",      "FF2D20", "laravel",     "white"),
-    "Gin":          ("Gin",          "00ADD8", "go",          "white"),
-}
 
 # package.json の依存名 -> フレームワーク名
 NPM_FRAMEWORKS = {
@@ -279,69 +236,13 @@ def get_pick_repos():
     ).get("items", [])
 
 
-def make_badge(name, badge_map):
-    if name not in badge_map:
-        return None
-    label, color, logo, font_color = badge_map[name]
-    return f"![{label}](https://img.shields.io/badge/{quote(label.replace(' ', '_'))}-{color}?style=flat-square&logo={logo}&logoColor={font_color})"
-
-
-def relative_luminance(hex_color):
-    def channel(c):
-        c = int(c, 16) / 255
-        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
-    r, g, b = (channel(hex_color[i:i + 2]) for i in (0, 2, 4))
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-
-
-def pick_slice_colors(names, badge_map):
-    """各項目の色を決める。バッジの色が使えないときは代替色を順に割り当てる"""
-    fallbacks = iter(FALLBACK_COLORS)
-    colors, used = [], set()
-    for name in names:
-        if name == "Other":
-            color = OTHER_COLOR
-        else:
-            color = badge_map[name][1] if name in badge_map else None
-            if color is None or color in used or relative_luminance(color) < MIN_LUMINANCE:
-                color = next((c for c in fallbacks if c not in used), OTHER_COLOR)
-        used.add(color)
-        colors.append(color)
-    return colors
-
-
-def make_pie_chart(title, items, badge_map):
-    """items: [(name, value)] を値の降順で Mermaid の円グラフにする（「Other」は最後）"""
-    items = sorted(items, key=lambda x: (x[0] == "Other", -x[1]))
-    theme = {
-        "pieTitleTextColor": CHART_TEXT_COLOR,
-        "pieLegendTextColor": CHART_TEXT_COLOR,
-        # 扇形は不透明にして暗い背景でも沈まないようにする。
-        # 扇形内の % 表示は小さい扇形で重なるため出さず、値は凡例（showData）で示す
-        "pieOpacity": "1",
-        "pieSectionTextSize": "0px",
-        "pieStrokeColor": CHART_TEXT_COLOR,
-        "pieOuterStrokeColor": CHART_TEXT_COLOR,
-    }
-    for i, color in enumerate(pick_slice_colors([n for n, _ in items], badge_map), start=1):
-        theme[f"pie{i}"] = f"#{color}"
-    init = json.dumps({"theme": "base", "themeVariables": theme})
-    lines = [
-        "```mermaid",
-        f"%%{{init: {init}}}%%",
-        f"pie showData title {title}",
-    ]
-    lines += [f'    "{name}" : {value}' for name, value in items]
-    lines.append("```")
-    return "\n".join(lines)
-
-
 def top_n(counts, limit):
     # 同じ値のときは名前順にして、実行ごとに並びが変わらないようにする
     return sorted(counts.items(), key=lambda x: (-x[1], x[0]))[:limit]
 
 
-def build_languages(repos):
+def collect_languages(repos):
+    """[(言語名, 割合%)] を返す。上位以外と小さすぎる言語は最後の「Other」にまとめる"""
     lang_bytes: dict[str, int] = {}
     for repo in repos:
         for lang, b in get_languages(repo["name"]).items():
@@ -351,21 +252,19 @@ def build_languages(repos):
 
     total = sum(lang_bytes.values())
     if total == 0:
-        return "_言語データがありません。_"
+        return []
 
-    # バッジの有無に関係なく、バイト数の多い順に並べる。小さすぎる言語は「Other」にまとめる
-    top = [(l, b) for l, b in top_n(lang_bytes, TOP_LANGS) if b / total * 100 >= MIN_SLICE_PCT]
+    top = [(l, b) for l, b in top_n(lang_bytes, TOP_LANGS) if b / total * 100 >= MIN_SHARE_PCT]
     other = total - sum(b for _, b in top)
-    badges = " ".join(filter(None, (make_badge(l, LANGUAGE_BADGE_MAP) for l, _ in top)))
-
     items = [(l, round(b / total * 100, 1)) for l, b in top]
-    if other > 0:
+    # 丸めて 0.0% になるほど小さい「Other」は出さない
+    if round(other / total * 100, 1) > 0:
         items.append(("Other", round(other / total * 100, 1)))
-    chart = make_pie_chart("Languages (%)", items, LANGUAGE_BADGE_MAP)
-    return f"{badges}\n\n{chart}" if badges else chart
+    return items
 
 
-def build_frameworks(repos):
+def collect_frameworks(repos):
+    """[(フレームワーク名, 使っているリポジトリ数)] を返す"""
     fw_repos: dict[str, int] = {}
     # フォークは他人のコードなのでフレームワークの集計から除く
     for repo in repos:
@@ -373,23 +272,26 @@ def build_frameworks(repos):
             continue
         for fw in get_frameworks(repo):
             fw_repos[fw] = fw_repos.get(fw, 0) + 1
-
-    if not fw_repos:
-        return "_フレームワークは検出されませんでした。_"
-
-    top = top_n(fw_repos, TOP_FRAMEWORKS)
-    badges = " ".join(filter(None, (make_badge(f, FRAMEWORK_BADGE_MAP) for f, _ in top)))
-    chart = make_pie_chart("Frameworks (repositories)", top, FRAMEWORK_BADGE_MAP)
-    return f"{badges}\n\n{chart}"
+    return top_n(fw_repos, TOP_FRAMEWORKS)
 
 
 def build_tech_stack():
     repos = get_all_repos()
+    languages = collect_languages(repos)
+    frameworks = collect_frameworks(repos)
+
+    os.makedirs(ASSETS_DIR, exist_ok=True)
+    for theme in tech_stack_svg.THEMES:
+        with open(f"{ASSETS_DIR}/tech-stack-{theme}.svg", "w", encoding="utf-8") as f:
+            f.write(tech_stack_svg.render(theme, languages, frameworks))
+
+    # 画像を読めない環境向けに、内容を代替テキストにも入れる
+    alt = tech_stack_svg.describe(languages, frameworks)
     return (
-        "### Languages\n\n"
-        f"{build_languages(repos)}\n\n"
-        "### Frameworks\n\n"
-        f"{build_frameworks(repos)}"
+        "<picture>\n"
+        f'  <source media="(prefers-color-scheme: dark)" srcset="{ASSETS_DIR}/tech-stack-dark.svg">\n'
+        f'  <img alt="{html.escape(alt)}" src="{ASSETS_DIR}/tech-stack-light.svg">\n'
+        "</picture>"
     )
 
 
@@ -434,8 +336,13 @@ def build_writing():
 
 def update_section(content, marker, new_content):
     pattern = rf"(<!-- {marker}_START -->).*?(<!-- {marker}_END -->)"
-    replacement = rf"\1\n{new_content}\n\2"
-    return re.sub(pattern, replacement, content, flags=re.DOTALL)
+    # new_content を置換テンプレートとして解釈させない（説明文にバックスラッシュが含まれても壊れないように）
+    return re.sub(
+        pattern,
+        lambda m: f"{m.group(1)}\n{new_content}\n{m.group(2)}",
+        content,
+        flags=re.DOTALL,
+    )
 
 
 def build_last_updated():
