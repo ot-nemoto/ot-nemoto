@@ -1,39 +1,10 @@
 ## 🛠 Tech Stack
 
 <!-- TECH_STACK_START -->
-### Languages
-
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) ![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat-square&logo=php&logoColor=white) ![HTML](https://img.shields.io/badge/HTML-E34F26?style=flat-square&logo=html5&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) ![Ruby](https://img.shields.io/badge/Ruby-CC342D?style=flat-square&logo=ruby&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black) ![Shell](https://img.shields.io/badge/Shell-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
-
-```mermaid
-%%{init: {"theme": "base", "themeVariables": {"pieTitleTextColor": "#8C959F", "pieLegendTextColor": "#8C959F", "pieOpacity": "1", "pieSectionTextSize": "0px", "pieStrokeColor": "#8C959F", "pieOuterStrokeColor": "#8C959F", "pie1": "#3178C6", "pie2": "#777BB4", "pie3": "#E34F26", "pie4": "#3776AB", "pie5": "#CC342D", "pie6": "#F7DF1E", "pie7": "#4EAA25", "pie8": "#8C959F"}}}%%
-pie showData title Languages (%)
-    "TypeScript" : 49.0
-    "PHP" : 18.0
-    "HTML" : 10.0
-    "Python" : 9.4
-    "Ruby" : 8.0
-    "JavaScript" : 2.3
-    "Shell" : 1.4
-    "Other" : 1.8
-```
-
-### Frameworks
-
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white) ![Django](https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white) ![Rails](https://img.shields.io/badge/Rails-D30001?style=flat-square&logo=rubyonrails&logoColor=white) ![Express](https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white) ![Flask](https://img.shields.io/badge/Flask-000000?style=flat-square&logo=flask&logoColor=white) ![Nuxt](https://img.shields.io/badge/Nuxt-00DC82?style=flat-square&logo=nuxt&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=springboot&logoColor=white)
-
-```mermaid
-%%{init: {"theme": "base", "themeVariables": {"pieTitleTextColor": "#8C959F", "pieLegendTextColor": "#8C959F", "pieOpacity": "1", "pieSectionTextSize": "0px", "pieStrokeColor": "#8C959F", "pieOuterStrokeColor": "#8C959F", "pie1": "#8250DF", "pie2": "#BF3989", "pie3": "#D30001", "pie4": "#0969DA", "pie5": "#009688", "pie6": "#1A7F37", "pie7": "#00DC82", "pie8": "#6DB33F"}}}%%
-pie showData title Frameworks (repositories)
-    "Next.js" : 12
-    "Django" : 4
-    "Rails" : 4
-    "Express" : 2
-    "FastAPI" : 2
-    "Flask" : 2
-    "Nuxt" : 1
-    "Spring Boot" : 1
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tech-stack-dark.svg">
+  <img alt="Languages: TypeScript 49.0%, PHP 18.0%, HTML 10.0%, Python 9.5%, Ruby 8.0%, JavaScript 2.3%, Shell 1.4%, Other 1.8% / Frameworks: Next.js 12, Django 4, Rails 4, Express 2, FastAPI 2, Flask 2, Nuxt 1, Spring Boot 1" src="assets/tech-stack-light.svg">
+</picture>
 <!-- TECH_STACK_END -->
 
 ---
@@ -65,5 +36,5 @@ pie showData title Frameworks (repositories)
 ---
 
 <!-- LAST_UPDATED_START -->
-_Last updated: 2026-09-28 18:55 JST_
+_Last updated: 2026-09-28 19:44 JST_
 <!-- LAST_UPDATED_END -->

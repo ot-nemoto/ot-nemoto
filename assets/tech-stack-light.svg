@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="506" viewBox="0 0 460 506" role="img">
+<title>Languages: TypeScript 49.0%, PHP 18.0%, HTML 10.0%, Python 9.5%, Ruby 8.0%, JavaScript 2.3%, Shell 1.4%, Other 1.8% / Frameworks: Next.js 12, Django 4, Rails 4, Express 2, FastAPI 2, Flask 2, Nuxt 1, Spring Boot 1</title>
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
+.t{font-size:14px;font-weight:600;fill:#1f2328}
+.s{font-size:11px;fill:#59636e}
+.n{font-size:12px;fill:#1f2328}
+.v{font-size:12px;fill:#59636e;font-variant-numeric:tabular-nums}
+.grow{transform-box:fill-box;transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+.fade{animation:fade .5s ease-out backwards}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes fade{from{opacity:0}}
+@media (prefers-reduced-motion: reduce){.grow,.fade{animation:none}}
+
+</style>
+<rect x="0.5" y="0.5" width="459" height="201" rx="10" fill="#ffffff" stroke="#d1d9e0"/><text class="t" x="20" y="30">Languages</text><text class="s" x="20" y="47">Share of code across public repositories</text>
+<clipPath id="lang-bar-light"><rect x="20" y="64" width="420" height="12" rx="6"/></clipPath><g clip-path="url(#lang-bar-light)" class="grow"><rect x="20.00" y="64" width="203.80" height="12" fill="#2a78d6"/><rect x="225.80" y="64" width="73.60" height="12" fill="#eb6834"/><rect x="301.40" y="64" width="40.00" height="12" fill="#1baf7a"/><rect x="343.40" y="64" width="37.90" height="12" fill="#eda100"/><rect x="383.30" y="64" width="31.60" height="12" fill="#e87ba4"/><rect x="416.90" y="64" width="7.66" height="12" fill="#008300"/><rect x="426.56" y="64" width="3.88" height="12" fill="#4a3aa7"/><rect x="432.44" y="64" width="7.56" height="12" fill="#8c959f"/></g>
+<g class="fade" style="animation-delay:0.40s"><circle cx="25" cy="106" r="5" fill="#2a78d6"/><text class="n" x="37" y="110">TypeScript</text><text class="v" x="220" y="110" text-anchor="end">49.0%</text></g>
+<g class="fade" style="animation-delay:0.45s"><circle cx="245" cy="106" r="5" fill="#eb6834"/><text class="n" x="257" y="110">PHP</text><text class="v" x="440" y="110" text-anchor="end">18.0%</text></g>
+<g class="fade" style="animation-delay:0.50s"><circle cx="25" cy="130" r="5" fill="#1baf7a"/><text class="n" x="37" y="134">HTML</text><text class="v" x="220" y="134" text-anchor="end">10.0%</text></g>
+<g class="fade" style="animation-delay:0.55s"><circle cx="245" cy="130" r="5" fill="#eda100"/><text class="n" x="257" y="134">Python</text><text class="v" x="440" y="134" text-anchor="end">9.5%</text></g>
+<g class="fade" style="animation-delay:0.60s"><circle cx="25" cy="154" r="5" fill="#e87ba4"/><text class="n" x="37" y="158">Ruby</text><text class="v" x="220" y="158" text-anchor="end">8.0%</text></g>
+<g class="fade" style="animation-delay:0.65s"><circle cx="245" cy="154" r="5" fill="#008300"/><text class="n" x="257" y="158">JavaScript</text><text class="v" x="440" y="158" text-anchor="end">2.3%</text></g>
+<g class="fade" style="animation-delay:0.70s"><circle cx="25" cy="178" r="5" fill="#4a3aa7"/><text class="n" x="37" y="182">Shell</text><text class="v" x="220" y="182" text-anchor="end">1.4%</text></g>
+<g class="fade" style="animation-delay:0.75s"><circle cx="245" cy="178" r="5" fill="#8c959f"/><text class="n" x="257" y="182">Other</text><text class="v" x="440" y="182" text-anchor="end">1.8%</text></g>
+<rect x="0.5" y="218.5" width="459" height="287" rx="10" fill="#ffffff" stroke="#d1d9e0"/><text class="t" x="20" y="248">Frameworks</text><text class="s" x="20" y="265">Public repositories using each framework</text>
+<text class="n" x="20" y="300">Next.js</text><rect x="118" y="290" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,290 h276.00 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-276.00 z" fill="#2a78d6" class="grow" style="animation-delay:0.00s"/><text class="v" x="406.00" y="300">12</text>
+<text class="n" x="20" y="326">Django</text><rect x="118" y="316" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,316 h89.33 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-89.33 z" fill="#2a78d6" class="grow" style="animation-delay:0.06s"/><text class="v" x="219.33" y="326">4</text>
+<text class="n" x="20" y="352">Rails</text><rect x="118" y="342" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,342 h89.33 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-89.33 z" fill="#2a78d6" class="grow" style="animation-delay:0.12s"/><text class="v" x="219.33" y="352">4</text>
+<text class="n" x="20" y="378">Express</text><rect x="118" y="368" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,368 h42.67 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-42.67 z" fill="#2a78d6" class="grow" style="animation-delay:0.18s"/><text class="v" x="172.67" y="378">2</text>
+<text class="n" x="20" y="404">FastAPI</text><rect x="118" y="394" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,394 h42.67 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-42.67 z" fill="#2a78d6" class="grow" style="animation-delay:0.24s"/><text class="v" x="172.67" y="404">2</text>
+<text class="n" x="20" y="430">Flask</text><rect x="118" y="420" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,420 h42.67 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-42.67 z" fill="#2a78d6" class="grow" style="animation-delay:0.30s"/><text class="v" x="172.67" y="430">2</text>
+<text class="n" x="20" y="456">Nuxt</text><rect x="118" y="446" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,446 h19.33 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-19.33 z" fill="#2a78d6" class="grow" style="animation-delay:0.36s"/><text class="v" x="149.33" y="456">1</text>
+<text class="n" x="20" y="482">Spring Boot</text><rect x="118" y="472" width="280" height="12" rx="4" fill="#eff2f5"/><path d="M118,472 h19.33 a4,4 0 0 1 4,4 v4 a4,4 0 0 1 -4,4 h-19.33 z" fill="#2a78d6" class="grow" style="animation-delay:0.42s"/><text class="v" x="149.33" y="482">1</text>
+</svg>
