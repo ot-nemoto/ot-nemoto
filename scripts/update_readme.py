@@ -38,7 +38,6 @@ NON_LANGUAGES = {"Vue", "Svelte", "Astro"}
 
 FRAMEWORK_BADGE_MAP = {
     "Next.js":      ("Next.js",      "000000", "nextdotjs",   "white"),
-    "Vue.js":       ("Vue.js",       "4FC08D", "vuedotjs",    "white"),
     "Nuxt":         ("Nuxt",         "00DC82", "nuxt",        "white"),
     "Angular":      ("Angular",      "DD0031", "angular",     "white"),
     "Svelte":       ("Svelte",       "FF3E00", "svelte",      "white"),
@@ -60,7 +59,6 @@ FRAMEWORK_BADGE_MAP = {
 # マニフェストファイル名 -> {依存パッケージ名: フレームワーク名}
 NPM_FRAMEWORKS = {
     "next": "Next.js",
-    "vue": "Vue.js",
     "nuxt": "Nuxt",
     "@angular/core": "Angular",
     "svelte": "Svelte",
