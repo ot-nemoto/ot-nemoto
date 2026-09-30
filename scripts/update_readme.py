@@ -317,11 +317,11 @@ def build_projects():
                 ))
             written.add(path)
         alt = html.escape(f"{name}: {desc}" if desc else name)
-        # カード全体をリポジトリへのリンクにする。2 枚ずつ横に並び、狭い画面では折り返す
+        # カード全体をリポジトリへのリンクにする。最大 4 枚ずつ横に並び、狭い画面では折り返す
         cards.append(
             f'<a href="{html.escape(repo["html_url"])}"><picture>'
             f'<source media="(prefers-color-scheme: dark)" srcset="{cards_dir}/{name}-dark.svg">'
-            f'<img alt="{alt}" src="{cards_dir}/{name}-light.svg" width="400">'
+            f'<img alt="{alt}" src="{cards_dir}/{name}-light.svg" width="{project_card_svg.WIDTH}">'
             "</picture></a>"
         )
 

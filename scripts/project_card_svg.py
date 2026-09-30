@@ -2,12 +2,18 @@
 import unicodedata
 from html import escape
 
-WIDTH = 400
-HEIGHT = 150
-PADDING_X = 20
-DESC_FONT_SIZE = 12
+# README の幅（約 845px）に最大 4 枚並ぶ幅（4 枚 + 隙間で約 832px。5 枚は入らない）
+WIDTH = 205
+HEIGHT = 172
+PADDING_X = 14
+TITLE_FONT_SIZE = 12.5
+DESC_FONT_SIZE = 11
+DESC_LINE_HEIGHT = 15
+META_FONT_SIZE = 11
 DESC_MAX_WIDTH = WIDTH - PADDING_X * 2
-DESC_MAX_LINES = 3
+DESC_MAX_LINES = 5
+# 太字は同じサイズの通常の文字より少し幅が広い
+BOLD_WIDTH_RATIO = 1.08
 FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif"
 
 THEMES = {
@@ -47,15 +53,15 @@ def _char_width(ch):
     return 6.3
 
 
-def _text_width(text):
-    return sum(_char_width(ch) for ch in text) * DESC_FONT_SIZE / 12
+def _text_width(text, font_size=DESC_FONT_SIZE):
+    return sum(_char_width(ch) for ch in text) * font_size / 12
 
 
-def truncate(text, max_width):
+def truncate(text, max_width, font_size=DESC_FONT_SIZE):
     """1 行に収まらない分を「…」で省略する"""
-    if _text_width(text) <= max_width:
+    if _text_width(text, font_size) <= max_width:
         return text
-    while text and _text_width(text + "…") > max_width:
+    while text and _text_width(text + "…", font_size) > max_width:
         text = text[:-1]
     return text.rstrip() + "…"
 
@@ -98,37 +104,40 @@ def wrap_text(text, max_width=DESC_MAX_WIDTH, max_lines=DESC_MAX_LINES):
 
 def render(theme, name, description, language=None, stars=0, has_demo=False):
     c = THEMES[theme]
-    # リポジトリ名は 15px の太字なので、12px 換算の幅を狭めて 1 行に収める
-    title = truncate(name, DESC_MAX_WIDTH * 12 / 16)
+    title = truncate(name, DESC_MAX_WIDTH, TITLE_FONT_SIZE * BOLD_WIDTH_RATIO)
     lines = wrap_text(description or "No description")
     desc = "".join(
-        f'<text class="d" x="{PADDING_X}" y="{64 + i * 18}">{escape(line)}</text>' for i, line in enumerate(lines)
+        f'<text class="d" x="{PADDING_X}" y="{54 + i * DESC_LINE_HEIGHT}">{escape(line)}</text>'
+        for i, line in enumerate(lines)
     )
 
-    # 下部のメタ情報（言語・スター数・デモの有無）を左から並べる
-    meta, x, y = [], PADDING_X, HEIGHT - 20
+    # 下部のメタ情報（言語・スター数・デモの有無）を左から並べる。入りきらない項目は出さない
+    meta, x, y = [], PADDING_X, HEIGHT - 16
+    right = WIDTH - PADDING_X
     if language:
         color = LANGUAGE_COLORS.get(language, DEFAULT_LANGUAGE_COLOR)
-        meta.append(f'<circle cx="{x + 5}" cy="{y - 4}" r="5" fill="{color}"/>')
-        meta.append(f'<text class="m" x="{x + 15}" y="{y}">{escape(language)}</text>')
-        x += 15 + _text_width(language) + 18
-    if stars:
-        meta.append(f'<text class="m" x="{x}" y="{y}">★ {stars}</text>')
-        x += _text_width(f"* {stars}") + 22
-    if has_demo:
-        meta.append(f'<text class="m" x="{x}" y="{y}">Live demo ↗</text>')
+        label = truncate(language, right - x - 13, META_FONT_SIZE)
+        meta.append(f'<circle cx="{x + 4}" cy="{y - 4}" r="4" fill="{color}"/>')
+        meta.append(f'<text class="m" x="{x + 13}" y="{y}">{escape(label)}</text>')
+        x += 13 + _text_width(label, META_FONT_SIZE) + 12
+    for text in ([f"★ {stars}"] if stars else []) + (["Demo ↗"] if has_demo else []):
+        w = _text_width(text, META_FONT_SIZE)
+        if x + w > right:
+            break
+        meta.append(f'<text class="m" x="{x:.1f}" y="{y}">{text}</text>')
+        x += w + 12
 
     summary = f"{name}: {description}" if description else name
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img">
 <title>{escape(summary)}</title>
 <style>
 text{{font-family:{FONT}}}
-.n{{font-size:15px;font-weight:600;fill:{c["title"]}}}
+.n{{font-size:{TITLE_FONT_SIZE}px;font-weight:600;fill:{c["title"]}}}
 .d{{font-size:{DESC_FONT_SIZE}px;fill:{c["ink2"]}}}
-.m{{font-size:12px;fill:{c["muted"]}}}
+.m{{font-size:{META_FONT_SIZE}px;fill:{c["muted"]}}}
 </style>
-<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="10" fill="{c["bg"]}" stroke="{c["border"]}"/>
-<text class="n" x="{PADDING_X}" y="36">{escape(title)}</text>
+<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8" fill="{c["bg"]}" stroke="{c["border"]}"/>
+<text class="n" x="{PADDING_X}" y="30">{escape(title)}</text>
 {desc}
 {"".join(meta)}
 </svg>
