@@ -159,7 +159,7 @@ def render(theme, name, description, language=None, stars=0, has_demo=False):
     )
 
     # 下部のメタ情報（言語・スター数・デモの有無）を左から並べる。入りきらない項目は出さない。
-    # デモへのリンクは画像の中に置けないので、README 側でカードの並びの下にまとめて付ける
+    # 「Demo」はデモページがあることを示すだけ（画像の中にはリンクを置けないので、デモへはリポジトリから移動する）
     meta, x, y = [], PADDING_X, HEIGHT - 16
     right = WIDTH - PADDING_X
     if language:

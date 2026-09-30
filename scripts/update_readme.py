@@ -307,7 +307,7 @@ def build_projects():
     os.makedirs(cards_dir, exist_ok=True)
 
     written = set()
-    cards, demos = [], []
+    cards = []
     for repo in repos:
         name = repo["name"]
         desc = project_card_svg.clean(repo.get("description"))
@@ -322,8 +322,6 @@ def build_projects():
                     has_demo=bool(homepage),
                 ))
             written.add(os.path.basename(path))
-        if homepage:
-            demos.append(f'<a href="{html.escape(homepage)}">{html.escape(name)}</a>')
         alt = html.escape(f"{name}: {desc}" if desc else name)
         # カード全体をリポジトリへのリンクにする。最大 4 枚ずつ横に並び、狭い画面では折り返す
         cards.append(
@@ -342,11 +340,8 @@ def build_projects():
 
     if not cards:
         return "_`pick` トピックが付いたリポジトリはありません。_"
-    section = "<p>\n" + "\n".join(cards) + "\n</p>"
-    # カードは画像なのでリンクを 1 つしか付けられない。デモページへのリンクはカードの下にまとめる
-    if demos:
-        section += "\n\n🌐 Live demos: " + " · ".join(demos)
-    return section
+    # デモページへはリポジトリのページ（About の homepage）から移動してもらう
+    return "<p>\n" + "\n".join(cards) + "\n</p>"
 
 
 def update_section(content, marker, new_content):
