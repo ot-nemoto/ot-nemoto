@@ -9,5 +9,5 @@ text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helveti
 <rect x="0.5" y="0.5" width="199" height="171" rx="8" fill="#ffffff" stroke="#d1d9e0"/>
 <text class="n" x="14" y="30">link-hub</text>
 <text class="d" x="14" y="54">Bring scattered links together,</text><text class="d" x="14" y="69">grouped by tag and domain.</text><text class="d" x="14" y="84">Your personal bookmark hub.</text>
-<circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text><text class="m" x="99.4" y="156">Demo</text>
+<g fill="none" stroke="#818b98" stroke-width="1.1"><circle cx="180" cy="152" r="5.5"/><ellipse cx="180" cy="152" rx="2.3" ry="5.5"/><path d="M174.5 152h11M175.2 149.3h9.6M175.2 154.7h9.6"/></g><circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text>
 </svg>
