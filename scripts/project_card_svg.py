@@ -148,7 +148,18 @@ def wrap_text(text, max_width=DESC_MAX_WIDTH, max_lines=DESC_MAX_LINES):
     return lines[: max_lines - 1] + [last]
 
 
-def render(theme, name, description, language=None, stars=0, has_demo=False):
+def _web_icon(cx, cy, color):
+    """地球のアイコン（絵文字は OS によって見た目が変わるので線で描く）"""
+    return (
+        f'<g fill="none" stroke="{color}" stroke-width="1.1">'
+        f'<circle cx="{cx}" cy="{cy}" r="5.5"/>'
+        f'<ellipse cx="{cx}" cy="{cy}" rx="2.3" ry="5.5"/>'
+        f'<path d="M{cx - 5.5} {cy}h11M{cx - 4.8} {cy - 2.7}h9.6M{cx - 4.8} {cy + 2.7}h9.6"/>'
+        "</g>"
+    )
+
+
+def render(theme, name, description, language=None, stars=0, has_web=False):
     c = THEMES[theme]
     name, description, language = clean(name), clean(description), clean(language)
     title = truncate(name, DESC_MAX_WIDTH, TITLE_FONT_SIZE * BOLD_WIDTH_RATIO)
@@ -158,22 +169,21 @@ def render(theme, name, description, language=None, stars=0, has_demo=False):
         for i, line in enumerate(lines)
     )
 
-    # 下部のメタ情報（言語・スター数・デモの有無）を左から並べる。入りきらない項目は出さない。
-    # 「Demo」はデモページがあることを示すだけ（画像の中にはリンクを置けないので、デモへはリポジトリから移動する）
+    # 下部のメタ情報（言語・スター数）を左から並べる。入りきらない項目は出さない。
+    # Web ページ（homepage）があるリポジトリは、右下に地球のアイコンを出す（リンクではなく目印）
     meta, x, y = [], PADDING_X, HEIGHT - 16
     right = WIDTH - PADDING_X
+    if has_web:
+        meta.append(_web_icon(right - 6, y - 4, c["muted"]))
+        right -= 12 + 8
     if language:
         color = LANGUAGE_COLORS.get(language, DEFAULT_LANGUAGE_COLOR)
         label = truncate(language, right - x - 13, META_FONT_SIZE)
         meta.append(f'<circle cx="{x + 4}" cy="{y - 4}" r="4" fill="{color}"/>')
         meta.append(f'<text class="m" x="{x + 13}" y="{y}">{escape(label)}</text>')
         x += 13 + _text_width(label, META_FONT_SIZE) + 12
-    for text in ([f"★ {stars}"] if stars else []) + (["Demo"] if has_demo else []):
-        w = _text_width(text, META_FONT_SIZE)
-        if x + w > right:
-            break
-        meta.append(f'<text class="m" x="{x:.1f}" y="{y}">{text}</text>')
-        x += w + 12
+    if stars and x + _text_width(f"★ {stars}", META_FONT_SIZE) <= right:
+        meta.append(f'<text class="m" x="{x:.1f}" y="{y}">★ {stars}</text>')
 
     summary = f"{name}: {description}" if description else name
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img">
