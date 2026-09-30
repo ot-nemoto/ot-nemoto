@@ -231,10 +231,15 @@ def get_frameworks(repo):
 
 
 def get_pick_repos():
-    return api_get(
+    data = api_get(
         "https://api.github.com/search/repositories",
-        params={"q": f"user:{USERNAME} topic:pick", "per_page": 100, "sort": "updated"},
-    ).get("items", [])
+        params={"q": f"user:{USERNAME} topic:pick", "per_page": 100},
+    )
+    # 検索がタイムアウトして結果が欠けていると、カードを誤って消してしまうので止める
+    if data.get("incomplete_results"):
+        raise RuntimeError("GitHub search returned incomplete results")
+    # 更新順だと push のたびに並びが変わるので、名前順に固定する
+    return sorted(data.get("items", []), key=lambda r: r["name"].lower())
 
 
 def top_n(counts, limit):
@@ -302,10 +307,11 @@ def build_projects():
     os.makedirs(cards_dir, exist_ok=True)
 
     written = set()
-    cards = []
+    cards, demos = [], []
     for repo in repos:
         name = repo["name"]
-        desc = repo.get("description") or ""
+        desc = project_card_svg.clean(repo.get("description"))
+        homepage = (repo.get("homepage") or "").strip()
         for theme in project_card_svg.THEMES:
             path = f"{cards_dir}/{name}-{theme}.svg"
             with open(path, "w", encoding="utf-8") as f:
@@ -313,9 +319,11 @@ def build_projects():
                     theme, name, desc,
                     language=repo.get("language"),
                     stars=repo.get("stargazers_count", 0),
-                    has_demo=bool(repo.get("homepage")),
+                    has_demo=bool(homepage),
                 ))
-            written.add(path)
+            written.add(os.path.basename(path))
+        if homepage:
+            demos.append(f'<a href="{html.escape(homepage)}">{html.escape(name)}</a>')
         alt = html.escape(f"{name}: {desc}" if desc else name)
         # カード全体をリポジトリへのリンクにする。最大 4 枚ずつ横に並び、狭い画面では折り返す
         cards.append(
@@ -325,15 +333,20 @@ def build_projects():
             "</picture></a>"
         )
 
-    # `pick` トピックから外れたリポジトリのカードを消す
+    # `pick` トピックから外れたリポジトリのカードを消す（このスクリプトが作るカード以外には触らない）
     for filename in os.listdir(cards_dir):
         path = f"{cards_dir}/{filename}"
-        if path not in written:
+        is_card = filename.endswith(("-light.svg", "-dark.svg")) and os.path.isfile(path)
+        if is_card and filename not in written:
             os.remove(path)
 
     if not cards:
         return "_`pick` トピックが付いたリポジトリはありません。_"
-    return "<p>\n" + "\n".join(cards) + "\n</p>"
+    section = "<p>\n" + "\n".join(cards) + "\n</p>"
+    # カードは画像なのでリンクを 1 つしか付けられない。デモページへのリンクはカードの下にまとめる
+    if demos:
+        section += "\n\n🌐 Live demos: " + " · ".join(demos)
+    return section
 
 
 def update_section(content, marker, new_content):
