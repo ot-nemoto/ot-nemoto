@@ -311,7 +311,6 @@ def build_projects():
     for repo in repos:
         name = repo["name"]
         desc = project_card_svg.clean(repo.get("description"))
-        homepage = (repo.get("homepage") or "").strip()
         for theme in project_card_svg.THEMES:
             path = f"{cards_dir}/{name}-{theme}.svg"
             with open(path, "w", encoding="utf-8") as f:
@@ -319,7 +318,6 @@ def build_projects():
                     theme, name, desc,
                     language=repo.get("language"),
                     stars=repo.get("stargazers_count", 0),
-                    has_demo=bool(homepage),
                 ))
             written.add(os.path.basename(path))
         alt = html.escape(f"{name}: {desc}" if desc else name)

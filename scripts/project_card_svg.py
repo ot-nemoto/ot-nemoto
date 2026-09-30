@@ -148,7 +148,7 @@ def wrap_text(text, max_width=DESC_MAX_WIDTH, max_lines=DESC_MAX_LINES):
     return lines[: max_lines - 1] + [last]
 
 
-def render(theme, name, description, language=None, stars=0, has_demo=False):
+def render(theme, name, description, language=None, stars=0):
     c = THEMES[theme]
     name, description, language = clean(name), clean(description), clean(language)
     title = truncate(name, DESC_MAX_WIDTH, TITLE_FONT_SIZE * BOLD_WIDTH_RATIO)
@@ -158,8 +158,7 @@ def render(theme, name, description, language=None, stars=0, has_demo=False):
         for i, line in enumerate(lines)
     )
 
-    # 下部のメタ情報（言語・スター数・デモの有無）を左から並べる。入りきらない項目は出さない。
-    # 「Demo」はデモページがあることを示すだけ（画像の中にはリンクを置けないので、デモへはリポジトリから移動する）
+    # 下部のメタ情報（言語・スター数）を左から並べる。入りきらない項目は出さない
     meta, x, y = [], PADDING_X, HEIGHT - 16
     right = WIDTH - PADDING_X
     if language:
@@ -168,12 +167,8 @@ def render(theme, name, description, language=None, stars=0, has_demo=False):
         meta.append(f'<circle cx="{x + 4}" cy="{y - 4}" r="4" fill="{color}"/>')
         meta.append(f'<text class="m" x="{x + 13}" y="{y}">{escape(label)}</text>')
         x += 13 + _text_width(label, META_FONT_SIZE) + 12
-    for text in ([f"★ {stars}"] if stars else []) + (["Demo"] if has_demo else []):
-        w = _text_width(text, META_FONT_SIZE)
-        if x + w > right:
-            break
-        meta.append(f'<text class="m" x="{x:.1f}" y="{y}">{text}</text>')
-        x += w + 12
+    if stars and x + _text_width(f"★ {stars}", META_FONT_SIZE) <= right:
+        meta.append(f'<text class="m" x="{x:.1f}" y="{y}">★ {stars}</text>')
 
     summary = f"{name}: {description}" if description else name
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img">
