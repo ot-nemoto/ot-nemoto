@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="172" viewBox="0 0 200 172" role="img">
+<title>eval-hub: Move your annual reviews out of spreadsheets. Keep self-evaluations, reviewer evaluations, and comments in one place, year by year.</title>
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
+.n{font-size:12px;font-weight:600;fill:#0969da}
+.d{font-size:11px;fill:#59636e}
+.m{font-size:11px;fill:#818b98}
+</style>
+<rect x="0.5" y="0.5" width="199" height="171" rx="8" fill="#ffffff" stroke="#d1d9e0"/>
+<text class="n" x="14" y="30">eval-hub</text>
+<text class="d" x="14" y="54">Move your annual reviews out</text><text class="d" x="14" y="69">of spreadsheets. Keep</text><text class="d" x="14" y="84">self-evaluations, reviewer</text><text class="d" x="14" y="99">evaluations, and comments in</text><text class="d" x="14" y="114">one place, year by year.</text>
+<circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text><text class="m" x="99.4" y="156">Demo</text>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="172" viewBox="0 0 200 172" role="img">
+<title>daily-hub: Make your team&#x27;s &quot;done today, doing tomorrow&quot; visible. Discuss reports in comments and look back with daily and monthly views.</title>
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
+.n{font-size:12px;font-weight:600;fill:#0969da}
+.d{font-size:11px;fill:#59636e}
+.m{font-size:11px;fill:#818b98}
+</style>
+<rect x="0.5" y="0.5" width="199" height="171" rx="8" fill="#ffffff" stroke="#d1d9e0"/>
+<text class="n" x="14" y="30">daily-hub</text>
+<text class="d" x="14" y="54">Make your team&#x27;s &quot;done today,</text><text class="d" x="14" y="69">doing tomorrow&quot; visible.</text><text class="d" x="14" y="84">Discuss reports in comments</text><text class="d" x="14" y="99">and look back with daily and</text><text class="d" x="14" y="114">monthly views.</text>
+<circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text><text class="m" x="99.4" y="156">Demo</text>
+</svg>

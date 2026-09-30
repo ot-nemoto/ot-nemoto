@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="172" viewBox="0 0 200 172" role="img">
+<title>github-diff-viewer: A web tool to compare files across different GitHub repositories, branches, or paths. View diffs side-by-side or unified, without authentication for public repos, or with a PAT for private ones. Shareable comparison state via URL.</title>
+<style>
+text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
+.n{font-size:12px;font-weight:600;fill:#4493f8}
+.d{font-size:11px;fill:#9198a1}
+.m{font-size:11px;fill:#8b949e}
+</style>
+<rect x="0.5" y="0.5" width="199" height="171" rx="8" fill="#0d1117" stroke="#3d444d"/>
+<text class="n" x="14" y="30">github-diff-viewer</text>
+<text class="d" x="14" y="54">A web tool to compare files</text><text class="d" x="14" y="69">across different GitHub</text><text class="d" x="14" y="84">repositories, branches, or</text><text class="d" x="14" y="99">paths. View diffs side-by-side</text><text class="d" x="14" y="114">or unified, without…</text>
+<circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text><text class="m" x="99.4" y="156">Demo</text>
+</svg>
