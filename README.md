@@ -25,16 +25,6 @@
 
 ---
 
-## ✍️ Writing
-
-<!-- WRITING_START -->
-| Project | Description |
-|---|---|
-| [fullstack-web-development-workshop](https://github.com/ot-nemoto/fullstack-web-development-workshop) | 📗実践フルスタックWeb開発ワークショップ |
-<!-- WRITING_END -->
-
----
-
 <!-- LAST_UPDATED_START -->
 _Last updated: 2026-09-28 19:44 JST_
 <!-- LAST_UPDATED_END -->
