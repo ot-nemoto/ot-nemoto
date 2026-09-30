@@ -8,6 +8,7 @@ import tomllib
 from urllib.parse import quote
 from datetime import datetime, timezone, timedelta
 
+import project_card_svg
 import tech_stack_svg
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
@@ -297,19 +298,42 @@ def build_tech_stack():
 
 def build_projects():
     repos = get_pick_repos()
-    if not repos:
-        return "_`pick` トピックが付いたリポジトリはありません。_"
+    cards_dir = f"{ASSETS_DIR}/projects"
+    os.makedirs(cards_dir, exist_ok=True)
 
-    rows = []
+    written = set()
+    cards = []
     for repo in repos:
         name = repo["name"]
         desc = repo.get("description") or ""
-        url = repo["html_url"]
-        homepage = repo.get("homepage") or ""
-        web = f"[🌐]({homepage})" if homepage else ""
-        rows.append(f"| [{name}]({url}) | {desc} | {web} |")
+        for theme in project_card_svg.THEMES:
+            path = f"{cards_dir}/{name}-{theme}.svg"
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(project_card_svg.render(
+                    theme, name, desc,
+                    language=repo.get("language"),
+                    stars=repo.get("stargazers_count", 0),
+                    has_demo=bool(repo.get("homepage")),
+                ))
+            written.add(path)
+        alt = html.escape(f"{name}: {desc}" if desc else name)
+        # カード全体をリポジトリへのリンクにする。2 枚ずつ横に並び、狭い画面では折り返す
+        cards.append(
+            f'<a href="{html.escape(repo["html_url"])}"><picture>'
+            f'<source media="(prefers-color-scheme: dark)" srcset="{cards_dir}/{name}-dark.svg">'
+            f'<img alt="{alt}" src="{cards_dir}/{name}-light.svg" width="400">'
+            "</picture></a>"
+        )
 
-    return "| Project | Description | |\n|---|---|---|\n" + "\n".join(rows)
+    # `pick` トピックから外れたリポジトリのカードを消す
+    for filename in os.listdir(cards_dir):
+        path = f"{cards_dir}/{filename}"
+        if path not in written:
+            os.remove(path)
+
+    if not cards:
+        return "_`pick` トピックが付いたリポジトリはありません。_"
+    return "<p>\n" + "\n".join(cards) + "\n</p>"
 
 
 def update_section(content, marker, new_content):
