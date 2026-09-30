@@ -308,7 +308,8 @@ def build_projects():
 
     written = set()
     cards = []
-    for repo in repos:
+    cols = project_card_svg.GRID_COLUMNS
+    for i, repo in enumerate(repos):
         name = repo["name"]
         desc = project_card_svg.clean(repo.get("description"))
         for theme in project_card_svg.THEMES:
@@ -319,6 +320,8 @@ def build_projects():
                     language=repo.get("language"),
                     stars=repo.get("stargazers_count", 0),
                     has_web=bool((repo.get("homepage") or "").strip()),
+                    # 白と色付きのカードを市松模様に並べる
+                    tinted=(i // cols + i % cols) % 2 == 1,
                 ))
             written.add(os.path.basename(path))
         alt = html.escape(f"{name}: {desc}" if desc else name)

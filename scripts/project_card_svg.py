@@ -20,12 +20,18 @@ BOLD_WIDTH_RATIO = 1.08
 WIDTH_SAFETY = 1.08
 FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif"
 
+# 市松模様で色付きカードを交互に並べるときの 1 行の枚数（README に横 4 枚並ぶ前提）
+GRID_COLUMNS = 4
+
+# tint / tint_texture は色付きカード（白と交互に並べる淡い水色）の背景色と水彩のムラの色
 THEMES = {
     "light": {
         "bg": "#ffffff", "border": "#d1d9e0", "title": "#0969da", "ink2": "#59636e", "muted": "#818b98",
+        "tint": "#e7f1fa", "tint_texture": "#b3d3f0",
     },
     "dark": {
         "bg": "#0d1117", "border": "#3d444d", "title": "#4493f8", "ink2": "#9198a1", "muted": "#8b949e",
+        "tint": "#111c2b", "tint_texture": "#1a3050",
     },
 }
 
@@ -159,7 +165,22 @@ def _web_icon(cx, cy, color):
     )
 
 
-def render(theme, name, description, language=None, stars=0, has_web=False):
+def _tinted_background(c, seed):
+    """色付きカードの背景。淡い色に、水彩のようなかすかなムラを重ねる"""
+    r, g, b = (int(c["tint_texture"][i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return (
+        f'<filter id="wc" x="0" y="0" width="100%" height="100%">'
+        f'<feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="{seed}"/>'
+        f'<feColorMatrix type="matrix" values="0 0 0 0 {r:.3f} 0 0 0 0 {g:.3f} 0 0 0 0 {b:.3f} 1.6 0 0 0 -0.62"/>'
+        "</filter>"
+        f'<clipPath id="card"><rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8"/></clipPath>'
+        f'<g clip-path="url(#card)"><rect width="{WIDTH}" height="{HEIGHT}" fill="{c["tint"]}"/>'
+        f'<rect width="{WIDTH}" height="{HEIGHT}" filter="url(#wc)"/></g>'
+        f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8" fill="none" stroke="{c["border"]}"/>'
+    )
+
+
+def render(theme, name, description, language=None, stars=0, has_web=False, tinted=False):
     c = THEMES[theme]
     name, description, language = clean(name), clean(description), clean(language)
     title = truncate(name, DESC_MAX_WIDTH, TITLE_FONT_SIZE * BOLD_WIDTH_RATIO)
@@ -186,6 +207,14 @@ def render(theme, name, description, language=None, stars=0, has_web=False):
         meta.append(f'<text class="m" x="{x:.1f}" y="{y}">★ {stars}</text>')
 
     summary = f"{name}: {description}" if description else name
+    if tinted:
+        # カードごとにムラの模様が変わるよう、名前から乱数の種を決める
+        background = _tinted_background(c, sum(map(ord, name)) % 997)
+    else:
+        background = (
+            f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8" '
+            f'fill="{c["bg"]}" stroke="{c["border"]}"/>'
+        )
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img">
 <title>{escape(summary)}</title>
 <style>
@@ -194,7 +223,7 @@ text{{font-family:{FONT}}}
 .d{{font-size:{DESC_FONT_SIZE}px;fill:{c["ink2"]}}}
 .m{{font-size:{META_FONT_SIZE}px;fill:{c["muted"]}}}
 </style>
-<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8" fill="{c["bg"]}" stroke="{c["border"]}"/>
+{background}
 <text class="n" x="{PADDING_X}" y="30">{escape(title)}</text>
 {desc}
 {"".join(meta)}
