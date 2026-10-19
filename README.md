@@ -3,7 +3,7 @@
 <!-- TECH_STACK_START -->
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/tech-stack-dark.svg">
-  <img alt="Languages: TypeScript 49.4%, PHP 17.4%, Python 10.5%, HTML 9.7%, Ruby 7.8%, JavaScript 2.2%, Shell 1.4%, Other 1.7% / Frameworks: Next.js 12, Django 4, Rails 4, Express 2, FastAPI 2, Flask 2, Nuxt 1, Spring Boot 1" src="assets/tech-stack-light.svg">
+  <img alt="Languages: TypeScript 49.9%, PHP 17.2%, Python 10.4%, HTML 9.6%, Ruby 7.7%, JavaScript 2.2%, Shell 1.3%, Other 1.7% / Frameworks: Next.js 12, Django 4, Rails 4, Express 2, FastAPI 2, Flask 2, Nuxt 1, Spring Boot 1" src="assets/tech-stack-light.svg">
 </picture>
 <!-- TECH_STACK_END -->
 
@@ -29,5 +29,5 @@
 ---
 
 <!-- LAST_UPDATED_START -->
-_Last updated: 2026-10-12 12:13 JST_
+_Last updated: 2026-10-19 11:21 JST_
 <!-- LAST_UPDATED_END -->
