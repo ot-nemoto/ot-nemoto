@@ -26,15 +26,18 @@ FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,
 # 市松模様で色付きカードを交互に並べるときの 1 行の枚数（README に横 4 枚並ぶ前提）
 GRID_COLUMNS = 4
 
-# tint / tint_texture は色付きカード（白と交互に並べる淡い水色）の背景色と水彩のムラの色
+# tint / tint_texture は色付きカード（白と交互に並べる淡い水色）の背景色と水彩のムラの色。
+# archived_tint / archived_texture はアーカイブ済みプロジェクトの色付きカード用（ベージュ）
 THEMES = {
     "light": {
         "bg": "#ffffff", "border": "#d1d9e0", "title": "#0969da", "ink2": "#59636e", "muted": "#818b98",
         "tint": "#e7f1fa", "tint_texture": "#b3d3f0",
+        "archived_tint": "#f6f0e7", "archived_texture": "#e0cfb4",
     },
     "dark": {
         "bg": "#0d1117", "border": "#3d444d", "title": "#4493f8", "ink2": "#9198a1", "muted": "#8b949e",
         "tint": "#111c2b", "tint_texture": "#1a3050",
+        "archived_tint": "#1e1a13", "archived_texture": "#3b3020",
     },
 }
 
@@ -168,16 +171,16 @@ def _web_icon(cx, cy, color):
     )
 
 
-def _tinted_background(c, seed, height):
+def _tinted_background(c, seed, height, tint, texture):
     """色付きカードの背景。淡い色に、水彩のようなかすかなムラを重ねる"""
-    r, g, b = (int(c["tint_texture"][i:i + 2], 16) / 255 for i in (1, 3, 5))
+    r, g, b = (int(texture[i:i + 2], 16) / 255 for i in (1, 3, 5))
     return (
         f'<filter id="wc" x="0" y="0" width="100%" height="100%">'
         f'<feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="{seed}"/>'
         f'<feColorMatrix type="matrix" values="0 0 0 0 {r:.3f} 0 0 0 0 {g:.3f} 0 0 0 0 {b:.3f} 1.6 0 0 0 -0.62"/>'
         "</filter>"
         f'<clipPath id="card"><rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{height - 1}" rx="8"/></clipPath>'
-        f'<g clip-path="url(#card)"><rect width="{WIDTH}" height="{height}" fill="{c["tint"]}"/>'
+        f'<g clip-path="url(#card)"><rect width="{WIDTH}" height="{height}" fill="{tint}"/>'
         f'<rect width="{WIDTH}" height="{height}" filter="url(#wc)"/></g>'
         f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{height - 1}" rx="8" fill="none" stroke="{c["border"]}"/>'
     )
@@ -217,7 +220,11 @@ def render(theme, name, description, language=None, stars=0, has_web=False, tint
     summary = f"{name}: {description}" if description else name
     if tinted:
         # カードごとにムラの模様が変わるよう、名前から乱数の種を決める
-        background = _tinted_background(c, sum(map(ord, name)) % 997, height)
+        # アーカイブ済み（compact）は水色ではなくベージュにして、動いているプロジェクトと区別する
+        tint, texture = (
+            (c["archived_tint"], c["archived_texture"]) if compact else (c["tint"], c["tint_texture"])
+        )
+        background = _tinted_background(c, sum(map(ord, name)) % 997, height, tint, texture)
     else:
         background = (
             f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{height - 1}" rx="8" '
