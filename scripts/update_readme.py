@@ -301,19 +301,18 @@ def build_tech_stack():
     )
 
 
-def build_projects():
-    repos = get_pick_repos()
-    cards_dir = f"{ASSETS_DIR}/projects"
-    os.makedirs(cards_dir, exist_ok=True)
+CARDS_DIR = f"{ASSETS_DIR}/projects"
 
-    written = set()
+
+def render_cards(repos, written, compact=False):
+    """リポジトリごとのカード SVG を書き出し、README に並べる HTML を返す"""
     cards = []
     cols = project_card_svg.GRID_COLUMNS
     for i, repo in enumerate(repos):
         name = repo["name"]
         desc = project_card_svg.clean(repo.get("description"))
         for theme in project_card_svg.THEMES:
-            path = f"{cards_dir}/{name}-{theme}.svg"
+            path = f"{CARDS_DIR}/{name}-{theme}.svg"
             with open(path, "w", encoding="utf-8") as f:
                 f.write(project_card_svg.render(
                     theme, name, desc,
@@ -322,28 +321,42 @@ def build_projects():
                     has_web=bool((repo.get("homepage") or "").strip()),
                     # 白と色付きのカードを市松模様に並べる
                     tinted=(i // cols + i % cols) % 2 == 1,
+                    compact=compact,
                 ))
             written.add(os.path.basename(path))
         alt = html.escape(f"{name}: {desc}" if desc else name)
         # カード全体をリポジトリへのリンクにする。最大 4 枚ずつ横に並び、狭い画面では折り返す
         cards.append(
             f'<a href="{html.escape(repo["html_url"])}"><picture>'
-            f'<source media="(prefers-color-scheme: dark)" srcset="{cards_dir}/{name}-dark.svg">'
-            f'<img alt="{alt}" src="{cards_dir}/{name}-light.svg" width="{project_card_svg.WIDTH}">'
+            f'<source media="(prefers-color-scheme: dark)" srcset="{CARDS_DIR}/{name}-dark.svg">'
+            f'<img alt="{alt}" src="{CARDS_DIR}/{name}-light.svg" width="{project_card_svg.WIDTH}">'
             "</picture></a>"
         )
+    # Web ページへはリポジトリのページ（About の homepage）から移動してもらう
+    return "<p>\n" + "\n".join(cards) + "\n</p>" if cards else ""
+
+
+def build_projects():
+    """Projects と Archived Projects の 2 つのセクションを返す"""
+    repos = get_pick_repos()
+    os.makedirs(CARDS_DIR, exist_ok=True)
+
+    written = set()
+    active = render_cards([r for r in repos if not r.get("archived")], written)
+    # アーカイブ済みは Projects に混ぜず、高さが約半分の小さいカードで別のセクションに並べる
+    archived = render_cards([r for r in repos if r.get("archived")], written, compact=True)
 
     # `pick` トピックから外れたリポジトリのカードを消す（このスクリプトが作るカード以外には触らない）
-    for filename in os.listdir(cards_dir):
-        path = f"{cards_dir}/{filename}"
+    for filename in os.listdir(CARDS_DIR):
+        path = f"{CARDS_DIR}/{filename}"
         is_card = filename.endswith(("-light.svg", "-dark.svg")) and os.path.isfile(path)
         if is_card and filename not in written:
             os.remove(path)
 
-    if not cards:
-        return "_`pick` トピックが付いたリポジトリはありません。_"
-    # Web ページへはリポジトリのページ（About の homepage）から移動してもらう
-    return "<p>\n" + "\n".join(cards) + "\n</p>"
+    return (
+        active or "_`pick` トピックが付いたリポジトリはありません。_",
+        archived or "_アーカイブ済みのプロジェクトはありません。_",
+    )
 
 
 def update_section(content, marker, new_content):
@@ -368,7 +381,9 @@ def main():
         content = f.read()
 
     content = update_section(content, "TECH_STACK", build_tech_stack())
-    content = update_section(content, "PROJECTS", build_projects())
+    projects, archived_projects = build_projects()
+    content = update_section(content, "PROJECTS", projects)
+    content = update_section(content, "ARCHIVED_PROJECTS", archived_projects)
     content = update_section(content, "LAST_UPDATED", build_last_updated())
 
     with open(README_PATH, "w", encoding="utf-8") as f:

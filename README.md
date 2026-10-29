@@ -26,6 +26,11 @@
 </p>
 <!-- PROJECTS_END -->
 
+### 🗄️ Archived Projects
+
+<!-- ARCHIVED_PROJECTS_START -->
+<!-- ARCHIVED_PROJECTS_END -->
+
 ---
 
 <!-- LAST_UPDATED_START -->
