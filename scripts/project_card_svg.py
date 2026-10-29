@@ -27,17 +27,21 @@ FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,
 GRID_COLUMNS = 4
 
 # tint / tint_texture は色付きカード（白と交互に並べる淡い水色）の背景色と水彩のムラの色。
-# archived_tint / archived_texture はアーカイブ済みプロジェクトの色付きカード用（ベージュ）
+# archived_tint / archived_texture はアーカイブ済みプロジェクトの色付きカード用（ベージュ）。
+# tinted_* は色付きカードの上の文字色。ムラの一番濃い部分でもコントラスト 4.5:1 以上になるよう、
+# 白いカードより濃く（ダークでは明るく）している
 THEMES = {
     "light": {
         "bg": "#ffffff", "border": "#d1d9e0", "title": "#0969da", "ink2": "#59636e", "muted": "#818b98",
         "tint": "#e7f1fa", "tint_texture": "#b3d3f0",
         "archived_tint": "#f6f0e7", "archived_texture": "#e0cfb4",
+        "tinted_title": "#0550ae", "tinted_ink2": "#424a53", "tinted_muted": "#4f5862",
     },
     "dark": {
         "bg": "#0d1117", "border": "#3d444d", "title": "#4493f8", "ink2": "#9198a1", "muted": "#8b949e",
         "tint": "#111c2b", "tint_texture": "#1a3050",
         "archived_tint": "#1e1a13", "archived_texture": "#3b3020",
+        "tinted_title": "#79b8ff", "tinted_ink2": "#b7bdc8", "tinted_muted": "#a6aeb8",
     },
 }
 
@@ -189,6 +193,8 @@ def _tinted_background(c, seed, height, tint, texture):
 def render(theme, name, description, language=None, stars=0, has_web=False, tinted=False, compact=False):
     """compact=True はアーカイブ済みプロジェクト用の小さいカード（名前と説明 2 行だけ）"""
     c = THEMES[theme]
+    if tinted:
+        c = {**c, "title": c["tinted_title"], "ink2": c["tinted_ink2"], "muted": c["tinted_muted"]}
     name, description, language = clean(name), clean(description), clean(language)
     height = COMPACT_HEIGHT if compact else HEIGHT
     title_y, desc_y = (28, 50) if compact else (30, 54)
@@ -200,22 +206,23 @@ def render(theme, name, description, language=None, stars=0, has_web=False, tint
     )
 
     # 下部のメタ情報（言語・スター数）を左から並べる。入りきらない項目は出さない。
-    # Web ページ（homepage）があるリポジトリは、右下に地球のアイコンを出す（リンクではなく目印）
-    meta, x, y = [], PADDING_X, height - 16
-    right = WIDTH - PADDING_X
-    if compact:
-        language, stars, has_web = None, 0, False
-    if has_web:
-        meta.append(_web_icon(right - 6, y - 4, c["muted"]))
-        right -= 12 + 8
-    if language:
-        color = LANGUAGE_COLORS.get(language, DEFAULT_LANGUAGE_COLOR)
-        label = truncate(language, right - x - 13, META_FONT_SIZE)
-        meta.append(f'<circle cx="{x + 4}" cy="{y - 4}" r="4" fill="{color}"/>')
-        meta.append(f'<text class="m" x="{x + 13}" y="{y}">{escape(label)}</text>')
-        x += 13 + _text_width(label, META_FONT_SIZE) + 12
-    if stars and x + _text_width(f"★ {stars}", META_FONT_SIZE) <= right:
-        meta.append(f'<text class="m" x="{x:.1f}" y="{y}">★ {stars}</text>')
+    # Web ページ（homepage）があるリポジトリは、右下に地球のアイコンを出す（リンクではなく目印）。
+    # 小さいカード（compact）は高さが足りないので、メタ情報は出さない
+    meta = []
+    if not compact:
+        x, y = PADDING_X, height - 16
+        right = WIDTH - PADDING_X
+        if has_web:
+            meta.append(_web_icon(right - 6, y - 4, c["muted"]))
+            right -= 12 + 8
+        if language:
+            color = LANGUAGE_COLORS.get(language, DEFAULT_LANGUAGE_COLOR)
+            label = truncate(language, right - x - 13, META_FONT_SIZE)
+            meta.append(f'<circle cx="{x + 4}" cy="{y - 4}" r="4" fill="{color}"/>')
+            meta.append(f'<text class="m" x="{x + 13}" y="{y}">{escape(label)}</text>')
+            x += 13 + _text_width(label, META_FONT_SIZE) + 12
+        if stars and x + _text_width(f"★ {stars}", META_FONT_SIZE) <= right:
+            meta.append(f'<text class="m" x="{x:.1f}" y="{y}">★ {stars}</text>')
 
     summary = f"{name}: {description}" if description else name
     if tinted:

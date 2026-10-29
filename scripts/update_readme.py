@@ -362,12 +362,16 @@ def build_projects():
 def update_section(content, marker, new_content):
     pattern = rf"(<!-- {marker}_START -->).*?(<!-- {marker}_END -->)"
     # new_content を置換テンプレートとして解釈させない（説明文にバックスラッシュが含まれても壊れないように）
-    return re.sub(
+    updated, count = re.subn(
         pattern,
         lambda m: f"{m.group(1)}\n{new_content}\n{m.group(2)}",
         content,
         flags=re.DOTALL,
     )
+    # マーカーが消えたり書き間違えたりしていると何も更新されないので、気づけるよう失敗させる
+    if count == 0:
+        raise RuntimeError(f"README is missing the {marker}_START / {marker}_END markers")
+    return updated
 
 
 def build_last_updated():

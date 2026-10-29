@@ -29,6 +29,7 @@
 ### 🗄️ Archived Projects
 
 <!-- ARCHIVED_PROJECTS_START -->
+_アーカイブ済みのプロジェクトはありません。_
 <!-- ARCHIVED_PROJECTS_END -->
 
 ---
