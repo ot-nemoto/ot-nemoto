@@ -14,6 +14,9 @@ DESC_LINE_HEIGHT = 15
 META_FONT_SIZE = 11
 DESC_MAX_WIDTH = WIDTH - PADDING_X * 2
 DESC_MAX_LINES = 5
+# アーカイブ済みプロジェクト用の小さいカード（高さは通常の約半分。名前と説明 2 行だけ）
+COMPACT_HEIGHT = 86
+COMPACT_DESC_MAX_LINES = 2
 # 太字は同じサイズの通常の文字より少し幅が広い
 BOLD_WIDTH_RATIO = 1.08
 # 文字幅は概算なので、実際のフォント（macOS の SF Pro など）で広めに出ても収まるよう余裕を持たせる
@@ -23,15 +26,22 @@ FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,
 # 市松模様で色付きカードを交互に並べるときの 1 行の枚数（README に横 4 枚並ぶ前提）
 GRID_COLUMNS = 4
 
-# tint / tint_texture は色付きカード（白と交互に並べる淡い水色）の背景色と水彩のムラの色
+# tint / tint_texture は色付きカード（白と交互に並べる淡い水色）の背景色と水彩のムラの色。
+# archived_tint / archived_texture はアーカイブ済みプロジェクトの色付きカード用（ベージュ）。
+# tinted_* は色付きカードの上の文字色。ムラの一番濃い部分でもコントラスト 4.5:1 以上になるよう、
+# 白いカードより濃く（ダークでは明るく）している
 THEMES = {
     "light": {
         "bg": "#ffffff", "border": "#d1d9e0", "title": "#0969da", "ink2": "#59636e", "muted": "#818b98",
         "tint": "#e7f1fa", "tint_texture": "#b3d3f0",
+        "archived_tint": "#f6f0e7", "archived_texture": "#e0cfb4",
+        "tinted_title": "#0550ae", "tinted_ink2": "#424a53", "tinted_muted": "#4f5862",
     },
     "dark": {
         "bg": "#0d1117", "border": "#3d444d", "title": "#4493f8", "ink2": "#9198a1", "muted": "#8b949e",
         "tint": "#111c2b", "tint_texture": "#1a3050",
+        "archived_tint": "#1e1a13", "archived_texture": "#3b3020",
+        "tinted_title": "#79b8ff", "tinted_ink2": "#b7bdc8", "tinted_muted": "#a6aeb8",
     },
 }
 
@@ -165,57 +175,69 @@ def _web_icon(cx, cy, color):
     )
 
 
-def _tinted_background(c, seed):
+def _tinted_background(c, seed, height, tint, texture):
     """色付きカードの背景。淡い色に、水彩のようなかすかなムラを重ねる"""
-    r, g, b = (int(c["tint_texture"][i:i + 2], 16) / 255 for i in (1, 3, 5))
+    r, g, b = (int(texture[i:i + 2], 16) / 255 for i in (1, 3, 5))
     return (
         f'<filter id="wc" x="0" y="0" width="100%" height="100%">'
         f'<feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="{seed}"/>'
         f'<feColorMatrix type="matrix" values="0 0 0 0 {r:.3f} 0 0 0 0 {g:.3f} 0 0 0 0 {b:.3f} 1.6 0 0 0 -0.62"/>'
         "</filter>"
-        f'<clipPath id="card"><rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8"/></clipPath>'
-        f'<g clip-path="url(#card)"><rect width="{WIDTH}" height="{HEIGHT}" fill="{c["tint"]}"/>'
-        f'<rect width="{WIDTH}" height="{HEIGHT}" filter="url(#wc)"/></g>'
-        f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8" fill="none" stroke="{c["border"]}"/>'
+        f'<clipPath id="card"><rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{height - 1}" rx="8"/></clipPath>'
+        f'<g clip-path="url(#card)"><rect width="{WIDTH}" height="{height}" fill="{tint}"/>'
+        f'<rect width="{WIDTH}" height="{height}" filter="url(#wc)"/></g>'
+        f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{height - 1}" rx="8" fill="none" stroke="{c["border"]}"/>'
     )
 
 
-def render(theme, name, description, language=None, stars=0, has_web=False, tinted=False):
+def render(theme, name, description, language=None, stars=0, has_web=False, tinted=False, compact=False):
+    """compact=True はアーカイブ済みプロジェクト用の小さいカード（名前と説明 2 行だけ）"""
     c = THEMES[theme]
+    if tinted:
+        c = {**c, "title": c["tinted_title"], "ink2": c["tinted_ink2"], "muted": c["tinted_muted"]}
     name, description, language = clean(name), clean(description), clean(language)
+    height = COMPACT_HEIGHT if compact else HEIGHT
+    title_y, desc_y = (28, 50) if compact else (30, 54)
     title = truncate(name, DESC_MAX_WIDTH, TITLE_FONT_SIZE * BOLD_WIDTH_RATIO)
-    lines = wrap_text(description or "No description")
+    lines = wrap_text(description or "No description", max_lines=COMPACT_DESC_MAX_LINES if compact else DESC_MAX_LINES)
     desc = "".join(
-        f'<text class="d" x="{PADDING_X}" y="{54 + i * DESC_LINE_HEIGHT}">{escape(line)}</text>'
+        f'<text class="d" x="{PADDING_X}" y="{desc_y + i * DESC_LINE_HEIGHT}">{escape(line)}</text>'
         for i, line in enumerate(lines)
     )
 
     # 下部のメタ情報（言語・スター数）を左から並べる。入りきらない項目は出さない。
-    # Web ページ（homepage）があるリポジトリは、右下に地球のアイコンを出す（リンクではなく目印）
-    meta, x, y = [], PADDING_X, HEIGHT - 16
-    right = WIDTH - PADDING_X
-    if has_web:
-        meta.append(_web_icon(right - 6, y - 4, c["muted"]))
-        right -= 12 + 8
-    if language:
-        color = LANGUAGE_COLORS.get(language, DEFAULT_LANGUAGE_COLOR)
-        label = truncate(language, right - x - 13, META_FONT_SIZE)
-        meta.append(f'<circle cx="{x + 4}" cy="{y - 4}" r="4" fill="{color}"/>')
-        meta.append(f'<text class="m" x="{x + 13}" y="{y}">{escape(label)}</text>')
-        x += 13 + _text_width(label, META_FONT_SIZE) + 12
-    if stars and x + _text_width(f"★ {stars}", META_FONT_SIZE) <= right:
-        meta.append(f'<text class="m" x="{x:.1f}" y="{y}">★ {stars}</text>')
+    # Web ページ（homepage）があるリポジトリは、右下に地球のアイコンを出す（リンクではなく目印）。
+    # 小さいカード（compact）は高さが足りないので、メタ情報は出さない
+    meta = []
+    if not compact:
+        x, y = PADDING_X, height - 16
+        right = WIDTH - PADDING_X
+        if has_web:
+            meta.append(_web_icon(right - 6, y - 4, c["muted"]))
+            right -= 12 + 8
+        if language:
+            color = LANGUAGE_COLORS.get(language, DEFAULT_LANGUAGE_COLOR)
+            label = truncate(language, right - x - 13, META_FONT_SIZE)
+            meta.append(f'<circle cx="{x + 4}" cy="{y - 4}" r="4" fill="{color}"/>')
+            meta.append(f'<text class="m" x="{x + 13}" y="{y}">{escape(label)}</text>')
+            x += 13 + _text_width(label, META_FONT_SIZE) + 12
+        if stars and x + _text_width(f"★ {stars}", META_FONT_SIZE) <= right:
+            meta.append(f'<text class="m" x="{x:.1f}" y="{y}">★ {stars}</text>')
 
     summary = f"{name}: {description}" if description else name
     if tinted:
         # カードごとにムラの模様が変わるよう、名前から乱数の種を決める
-        background = _tinted_background(c, sum(map(ord, name)) % 997)
+        # アーカイブ済み（compact）は水色ではなくベージュにして、動いているプロジェクトと区別する
+        tint, texture = (
+            (c["archived_tint"], c["archived_texture"]) if compact else (c["tint"], c["tint_texture"])
+        )
+        background = _tinted_background(c, sum(map(ord, name)) % 997, height, tint, texture)
     else:
         background = (
-            f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{HEIGHT - 1}" rx="8" '
+            f'<rect x="0.5" y="0.5" width="{WIDTH - 1}" height="{height - 1}" rx="8" '
             f'fill="{c["bg"]}" stroke="{c["border"]}"/>'
         )
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}" role="img">
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img">
 <title>{escape(summary)}</title>
 <style>
 text{{font-family:{FONT}}}
@@ -224,7 +246,7 @@ text{{font-family:{FONT}}}
 .m{{font-size:{META_FONT_SIZE}px;fill:{c["muted"]}}}
 </style>
 {background}
-<text class="n" x="{PADDING_X}" y="30">{escape(title)}</text>
+<text class="n" x="{PADDING_X}" y="{title_y}">{escape(title)}</text>
 {desc}
 {"".join(meta)}
 </svg>
