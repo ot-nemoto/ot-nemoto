@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="172" viewBox="0 0 200 172" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="86" viewBox="0 0 200 86" role="img">
 <title>slow-query-viewer: An analysis tool that visualizes query statistics, time-series data, and parameters simply by dragging and dropping a MySQL slow query log into your browser. It requires no server setup and is ready to use immediately.</title>
 <style>
 text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
-.n{font-size:12px;font-weight:600;fill:#0969da}
-.d{font-size:11px;fill:#59636e}
-.m{font-size:11px;fill:#818b98}
+.n{font-size:12px;font-weight:600;fill:#0550ae}
+.d{font-size:11px;fill:#424a53}
+.m{font-size:11px;fill:#4f5862}
 </style>
-<filter id="wc" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="770"/><feColorMatrix type="matrix" values="0 0 0 0 0.702 0 0 0 0 0.827 0 0 0 0 0.941 1.6 0 0 0 -0.62"/></filter><clipPath id="card"><rect x="0.5" y="0.5" width="199" height="171" rx="8"/></clipPath><g clip-path="url(#card)"><rect width="200" height="172" fill="#e7f1fa"/><rect width="200" height="172" filter="url(#wc)"/></g><rect x="0.5" y="0.5" width="199" height="171" rx="8" fill="none" stroke="#d1d9e0"/>
-<text class="n" x="14" y="30">slow-query-viewer</text>
-<text class="d" x="14" y="54">An analysis tool that visualizes</text><text class="d" x="14" y="69">query statistics, time-series</text><text class="d" x="14" y="84">data, and parameters simply by</text><text class="d" x="14" y="99">dragging and dropping a</text><text class="d" x="14" y="114">MySQL slow query log into…</text>
-<g fill="none" stroke="#818b98" stroke-width="1.1"><circle cx="180" cy="152" r="5.5"/><ellipse cx="180" cy="152" rx="2.3" ry="5.5"/><path d="M174.5 152h11M175.2 149.3h9.6M175.2 154.7h9.6"/></g><circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text>
+<filter id="wc" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="770"/><feColorMatrix type="matrix" values="0 0 0 0 0.878 0 0 0 0 0.812 0 0 0 0 0.706 1.6 0 0 0 -0.62"/></filter><clipPath id="card"><rect x="0.5" y="0.5" width="199" height="85" rx="8"/></clipPath><g clip-path="url(#card)"><rect width="200" height="86" fill="#f6f0e7"/><rect width="200" height="86" filter="url(#wc)"/></g><rect x="0.5" y="0.5" width="199" height="85" rx="8" fill="none" stroke="#d1d9e0"/>
+<text class="n" x="14" y="28">slow-query-viewer</text>
+<text class="d" x="14" y="50">An analysis tool that visualizes</text><text class="d" x="14" y="65">query statistics, time-series…</text>
+
 </svg>

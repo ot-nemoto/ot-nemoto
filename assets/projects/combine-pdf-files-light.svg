@@ -2,12 +2,12 @@
 <title>combine-pdf-files: This is a client-side web tool that lets you rearrange, rotate, and delete pages from multiple PDF files directly in the browser, merge them into a single PDF, and download the result.</title>
 <style>
 text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
-.n{font-size:12px;font-weight:600;fill:#0969da}
-.d{font-size:11px;fill:#59636e}
-.m{font-size:11px;fill:#818b98}
+.n{font-size:12px;font-weight:600;fill:#0550ae}
+.d{font-size:11px;fill:#424a53}
+.m{font-size:11px;fill:#4f5862}
 </style>
-<rect x="0.5" y="0.5" width="199" height="171" rx="8" fill="#ffffff" stroke="#d1d9e0"/>
+<filter id="wc" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="671"/><feColorMatrix type="matrix" values="0 0 0 0 0.702 0 0 0 0 0.827 0 0 0 0 0.941 1.6 0 0 0 -0.62"/></filter><clipPath id="card"><rect x="0.5" y="0.5" width="199" height="171" rx="8"/></clipPath><g clip-path="url(#card)"><rect width="200" height="172" fill="#e7f1fa"/><rect width="200" height="172" filter="url(#wc)"/></g><rect x="0.5" y="0.5" width="199" height="171" rx="8" fill="none" stroke="#d1d9e0"/>
 <text class="n" x="14" y="30">combine-pdf-files</text>
 <text class="d" x="14" y="54">This is a client-side web tool</text><text class="d" x="14" y="69">that lets you rearrange, rotate,</text><text class="d" x="14" y="84">and delete pages from multiple</text><text class="d" x="14" y="99">PDF files directly in the</text><text class="d" x="14" y="114">browser, merge them into a…</text>
-<g fill="none" stroke="#818b98" stroke-width="1.1"><circle cx="180" cy="152" r="5.5"/><ellipse cx="180" cy="152" rx="2.3" ry="5.5"/><path d="M174.5 152h11M175.2 149.3h9.6M175.2 154.7h9.6"/></g><circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text>
+<g fill="none" stroke="#4f5862" stroke-width="1.1"><circle cx="180" cy="152" r="5.5"/><ellipse cx="180" cy="152" rx="2.3" ry="5.5"/><path d="M174.5 152h11M175.2 149.3h9.6M175.2 154.7h9.6"/></g><circle cx="18" cy="152" r="4" fill="#3178c6"/><text class="m" x="27" y="156">TypeScript</text>
 </svg>
