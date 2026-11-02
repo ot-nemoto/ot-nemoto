@@ -2,11 +2,11 @@
 <title>slow-query-viewer: An analysis tool that visualizes query statistics, time-series data, and parameters simply by dragging and dropping a MySQL slow query log into your browser. It requires no server setup and is ready to use immediately.</title>
 <style>
 text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif}
-.n{font-size:12px;font-weight:600;fill:#79b8ff}
-.d{font-size:11px;fill:#b7bdc8}
-.m{font-size:11px;fill:#a6aeb8}
+.n{font-size:12px;font-weight:600;fill:#4493f8}
+.d{font-size:11px;fill:#9198a1}
+.m{font-size:11px;fill:#8b949e}
 </style>
-<filter id="wc" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="770"/><feColorMatrix type="matrix" values="0 0 0 0 0.231 0 0 0 0 0.188 0 0 0 0 0.125 1.6 0 0 0 -0.62"/></filter><clipPath id="card"><rect x="0.5" y="0.5" width="199" height="85" rx="8"/></clipPath><g clip-path="url(#card)"><rect width="200" height="86" fill="#1e1a13"/><rect width="200" height="86" filter="url(#wc)"/></g><rect x="0.5" y="0.5" width="199" height="85" rx="8" fill="none" stroke="#3d444d"/>
+<rect x="0.5" y="0.5" width="199" height="85" rx="8" fill="#0d1117" stroke="#3d444d"/>
 <text class="n" x="14" y="28">slow-query-viewer</text>
 <text class="d" x="14" y="50">An analysis tool that visualizes</text><text class="d" x="14" y="65">query statistics, time-series…</text>
 
